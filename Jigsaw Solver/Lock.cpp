@@ -511,8 +511,9 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 		FOR_END
 	//}
 #endif
-		for (int c2 = 0; c2 < nC; c2++)
-		{
+			FOR_START(c2, 0, nC)
+		//	for (int c2 = 0; c2 < nC; c2++)
+		//{
 			VectorXb& test2c2 = test2[c2];
 			VectorXb& test3c2 = test3[c2];
 
@@ -524,7 +525,8 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 			}
 			bTest2Any[c2] = test2[c2].any();
 			bTest3Any[c2] = test3[c2].any();
-		}
+			FOR_END
+//		}
 
 		//DebugOutput("-----------------------------------------\n");
 

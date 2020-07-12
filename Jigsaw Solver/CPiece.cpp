@@ -28,7 +28,7 @@ ParsePiece(vector<Point2d>& piece, char* cp)
 	
 //	std::cout << x << y ;
 
-	if (x < 1000 && x >= 0)
+	if (x < 10000 && x >= 0)
 	{
 //		cout << " push";
 		piece.push_back(Point2d(x, y));
