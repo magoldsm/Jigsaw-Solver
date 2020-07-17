@@ -69,6 +69,7 @@ public:
 	void Text(std::string text, int x, int y);
 	void Unhold();
 	void NewScores();
+	LRESULT ConfirmPlacement(const char* szMessage);
 
 	void SavePuzzle();
 
@@ -84,14 +85,15 @@ private:
 
 #define	N_PROGRESS			4
 
-#define	WM_PROGRESS			(WM_USER+1)
-#define	WM_ERASE			(WM_USER+2)
-#define	WM_PLOT				(WM_USER+3)
-#define	WM_DELETE			(WM_USER+4)
-#define	WM_TEXT				(WM_USER+5)
-#define	WM_SAVE				(WM_USER+6)
-#define	WM_UNHOLD			(WM_USER+7)
-#define	WM_NEW_SCORE		(WM_USER+8)
+#define	WM_PROGRESS				(WM_USER+1)
+#define	WM_ERASE				(WM_USER+2)
+#define	WM_PLOT					(WM_USER+3)
+#define	WM_DELETE				(WM_USER+4)
+#define	WM_TEXT					(WM_USER+5)
+#define	WM_SAVE					(WM_USER+6)
+#define	WM_UNHOLD				(WM_USER+7)
+#define	WM_NEW_SCORE			(WM_USER+8)
+#define	WM_CONFIRM_PLACEMENT	(WM_USER+9)
 
 extern CProgress Progress;
 extern LARGE_INTEGER liStart, liFrequency, liSG, liEuclid, liBVD, liTotal;

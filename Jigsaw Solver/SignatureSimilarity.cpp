@@ -755,48 +755,16 @@ void FindConsecutive(int& nPiece1, int& nPiece2, int j)
 	}
 }
 
-bool TryLock(int c2, CFit& fitc2, GTransform& gLock, int j, Indices& tPiecePtIcs, LRESULT& plotHandle, Eigen::Vector2i& piecesc2, Eigen::Vector4d& score)
+bool TryLock(int c2, CFit& fitc2, GTransform& gLock, int j, Indices& tPiecePtIcs, LRESULT& plotHandle, Eigen::Vector2i& piecesc2, Vector5d& score)
 {
 	Indices tPiecePtIcs_3;
-	double q1, q2, q3;
-	if (0)//(ApproxEqual(-2.2427, fitc2.m_gFit.theta) || ApproxEqual(-2.2763, fitc2.m_gFit.theta))
-		  //					if (c2 == 1)
-	{
-		for (;;)
-		{
-			DebugOutput("Lock c2=%d: Piece %d, %d points.  SPB has %d points  theta=%.4f\n", c2, fitc2.m_Pieces(0, 0), Pieces[fitc2.m_Pieces(0, 0)].m_Contour.rows(), Tracker.back().m_SolvedPuzzleBoundary.rows(), fitc2.m_gFit.theta);
+	double q1, q2, q3, q4;
 
-			Lock(fitc2, Pieces[fitc2.m_Pieces(0, 0)].m_Contour, Tracker.back().m_SolvedPuzzleBoundary,
-				gLock, pParams->m_K3[j], tPiecePtIcs_3, Tracker.back().m_SP_Bdry_PtIcs_3, tPiecePtIcs, Tracker.back().m_SP_Bdry_PtIcs, pParams->m_szPlotLevel[0] > '2', plotHandle);
-
-			// Compute Scores
-
-			q1 = 1.0 * Tracker.back().m_SP_Bdry_PtIcs_3.size() / Tracker.back().m_SP_Bdry_PtIcs.size();
-			DebugOutput("m_SP_Bdry_PtIcs_3 has %d points,  m_SP_Bdry_PtIcs has %d points.  q1 = %.3f\n", Tracker.back().m_SP_Bdry_PtIcs_3.size(), Tracker.back().m_SP_Bdry_PtIcs.size(), q1);
-			DebugOutput("g = %.4f, %.4f, %.4f\n", gLock.theta, gLock.dx, gLock.dy);
-			if (Tracker.back().m_SP_Bdry_PtIcs_3.size() != 159 || Tracker.back().m_SP_Bdry_PtIcs.size() != 165)
-				__debugbreak();
-		}
-
-	}
 	DebugOutput("Lock c2=%d: Piece %d, %d points.  SPB has %d points  theta=%.4f\n", c2, fitc2.m_Pieces(0, 0), Pieces[fitc2.m_Pieces(0, 0)].m_Contour.rows(), Tracker.back().m_SolvedPuzzleBoundary.rows(), fitc2.m_gFit.theta);
 
-	//if (ApproxEqual(-1.90221, fitc2.m_gFit.theta) || ApproxEqual(-1.935986, fitc2.m_gFit.theta))
-	//{
-	//	::PostMessage(NULL, 0, 0, 0);
-	//}
-	//if (fitc2.m_Pieces(0, 0) == 3)
-	//{
-	//	::PostMessage(NULL, 0, 0, 0);
-	//	AlwaysOutput("c2=%d  Piece %d, theta=%f\n", c2, fitc2.m_Pieces(0, 0), fitc2.m_gFit.theta);
-	//}
 	Lock(fitc2, Pieces[fitc2.m_Pieces(0, 0)].m_Contour, Tracker.back().m_SolvedPuzzleBoundary,
 		gLock, pParams->m_K3[j], tPiecePtIcs_3, Tracker.back().m_SP_Bdry_PtIcs_3, tPiecePtIcs, Tracker.back().m_SP_Bdry_PtIcs, pParams->m_szPlotLevel[0] > '2', plotHandle);
 
-	//if (fitc2.m_Pieces(0, 0) == 3)
-	//{
-	//	::PostMessage(NULL, 0, 0, 0);
-	//}
 	// Compute Scores
 
 	q1 = 1.0 * Tracker.back().m_SP_Bdry_PtIcs_3.size() / Tracker.back().m_SP_Bdry_PtIcs.size();
@@ -816,8 +784,73 @@ bool TryLock(int c2, CFit& fitc2, GTransform& gLock, int j, Indices& tPiecePtIcs
 	q2 /= AverageLength;
 	q3 = Gather(Pieces[piecesc2[0]].m_Signature, tPiecePtIcs_3).col(0).array().abs().sum() / (Dkappa * AverageSize);
 
-	score << q1, q2, q3, pParams->m_dEta1* q1 + pParams->m_dEta2 * q3;
+	q4 = 0.0;
+
+	if (!((pParams->m_dEta1 * q1 + pParams->m_dEta2 * q3 > pParams->m_dQ1 || q2 > pParams->m_dQ2Star) && q2 > pParams->m_dQ2 && q3 > pParams->m_dQ3))
+	{
+		score << q1, q2, q3, q4, pParams->m_dEta1* q1 + pParams->m_dEta2 * q3;
+		return false;
+	}
+#if 0
+
+	size_t sz3 = Tracker.back().m_SP_Bdry_PtIcs_3.size();
+
+	for (size_t i = 0; i < sz3; i++)
+	{
+		CvPoint p;
+		p.x = 
+		pointPolygonTest;
+		q4 += 
+	}
+#endif
+
+	score << q1, q2, q3, q4, pParams->m_dEta1* q1 + pParams->m_dEta2 * q3;
 	return (pParams->m_dEta1 * q1 + pParams->m_dEta2 * q3 > pParams->m_dQ1 || q2 > pParams->m_dQ2Star) && q2 > pParams->m_dQ2 && q3 > pParams->m_dQ3;
+}
+
+void PlotAllPlacements(const LRESULT& fragh, int c1, LRESULT& farch1, LRESULT& farch2)
+{
+	Progress.Delete(fragh);
+	/******/Progress.Erase(true);
+	Progress.Plot(Tracker.back().m_SolvedPuzzleBoundary, RGB(0, 0, 255), 3);
+
+	for (int i = 0; i <= c1; i++)
+	{
+		PlotPlacement(Placements[i]);
+
+		//Progress.Plot(TransformCurve(Pieces[Placements[c1].m_nPiece].m_Contour, gLock));
+
+#ifdef _DEBUG
+		//Sleep(500);
+#endif
+		// Update fit arc points
+
+		CFit& fit = Placements[i].m_Fit;
+		Curve farcpts1, farcpts2;
+
+		for (int c4 = 0; c4 < fit.m_Arcs.rows(); c4++)
+		{
+			Curve x1 = TransformCurve(Pieces[fit.m_Pieces(0)].m_Arcs(fit.m_Arcs(c4, 0)).m_Contour,
+				Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[0]]].m_gLock);
+			Curve x2 = TransformCurve(Pieces[fit.m_Pieces(1)].m_Arcs(fit.m_Arcs(c4, 1)).m_Contour,
+				Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[1]]].m_gLock);
+
+			Append(farcpts1, x1);
+			Append(farcpts2, x2);
+		}
+
+		//if (farch1)
+		//	Progress.Delete(farch1);
+		//if (farch2)
+		//	Progress.Delete(farch2);
+
+		if (farcpts1.rows() != 0)
+			farch1 = Progress.Plot(farcpts1, RGB(255, 0, 255), -3);
+		if (farcpts2.rows() != 0)
+			farch2 = Progress.Plot(farcpts2, RGB(255, 0, 0), -3);
+	}
+
+	Progress.Unhold();
 }
 
 void PlacePieces()
@@ -840,7 +873,22 @@ void PlacePieces()
 		int piece1;							// Start with the "heaviest" piece.
 
 		double dummy = weights.maxCoeff(&piece1);
-		piece1 = 1;										// ***BUGBUG*** We compute slightly different weights than Hoff.
+		switch (nPieces)
+		{
+		case 8:
+			piece1 = 2;		// 8-piece cathedral
+			break;
+		case 69:
+			piece1 = 49;	// Baffler
+			break;
+		case 111:
+			piece1 = 49;	// Full cathedral
+			break;
+		default:
+			piece1 = 0;
+			break;
+		}
+		piece1 = 0;
 		Pieces[piece1].m_nActive = 1;
 
 		Tracker.back().SetSize(nPieces);
@@ -876,7 +924,7 @@ void PlacePieces()
 
 		Tracker.back().m_RemainingPieces.erase(Tracker.back().m_RemainingPieces.begin() + piece1);
 
-		Placements.emplace_back(piece1, Eigen::Vector4d(0.0, 0.0, 0.0, 0.0), GTransform(), CFit());
+		Placements.emplace_back(piece1, Vector5d(0.0, 0.0, 0.0, 0.0, 0.0), GTransform(), CFit());
 	}
 
 	Progress.NewScores();
@@ -1014,7 +1062,7 @@ void PlacePieces()
 				{
 					GTransform gLock;
 					Indices tPiecePtIcs;
-					Vector4d score;
+					Vector5d score;
 
 					//if (fitc2.m_Pieces(0) == 46 && fitc2.m_Pieces(1) == 11)
 					//{
@@ -1022,9 +1070,33 @@ void PlacePieces()
 					//	__debugbreak();
 					//}
 
+					//int p1 = fitc2.m_Pieces[0];
+					//int p2 = fitc2.m_Pieces[1];
+
+					//if (p1 == 1 && p2 == 2)
+					//	pParams->m_szPlotLevel[0] = '3';
+
 					bool bLockSucceeded = TryLock(c2, fitc2, gLock, j, tPiecePtIcs, plotHandle, piecesc2, score);
 
+					if (bLockSucceeded && pParams->m_bConfirmBeforePlacing)
+					{
+						auto h = Progress.Plot(TransformCurve(Pieces[fitc2.m_Pieces(0)].m_Contour, gLock));
+
+						char buff[1024];
+						sprintf_s(buff, sizeof(buff), "%d: %.3f  %.3f  %.3f  %.3f  %3f", fitc2.m_Pieces(0), score(0), score(1), score(2), score(3),score(4));
+
+						auto res = Progress.ConfirmPlacement(buff);
+						if (res == IDNO)
+						{
+							AlwaysOutput("%s\n", buff);
+							bLockSucceeded = false;
+						}
+						Progress.Delete(h);
+					}
+
 					// Update progress report
+
+					//pParams->m_szPlotLevel[0] = '2';
 
 					Progress(PROGRESS_CHECKING).m_Percent = 1.0*c2 / Fits.size();
 					Progress.UpdateReport();
@@ -1175,47 +1247,7 @@ void PlacePieces()
 						Progress(PROGRESS_PLACING).m_Percent= 1.0 * (c1 - nPieces + nRPc) / nRPc;
 						Progress.UpdateReport();
 
-						Progress.Delete(fragh);
-						/******/Progress.Erase(true);
-						Progress.Plot(Tracker.back().m_SolvedPuzzleBoundary, RGB(0, 0, 255), 3);
-
-						for (int i = 0; i <= c1; i++)
-						{
-							PlotPlacement(Placements[i]);
-
-							//Progress.Plot(TransformCurve(Pieces[Placements[c1].m_nPiece].m_Contour, gLock));
-
-#ifdef _DEBUG
-						//Sleep(500);
-#endif
-						// Update fit arc points
-
-							CFit& fit = Placements[i].m_Fit;
-							Curve farcpts1, farcpts2;
-
-							for (int c4 = 0; c4 < fit.m_Arcs.rows(); c4++)
-							{
-								Curve x1 = TransformCurve(Pieces[fit.m_Pieces(0)].m_Arcs(fit.m_Arcs(c4, 0)).m_Contour,
-									Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[0]]].m_gLock);
-								Curve x2 = TransformCurve(Pieces[fit.m_Pieces(1)].m_Arcs(fit.m_Arcs(c4, 1)).m_Contour,
-									Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[1]]].m_gLock);
-
-								Append(farcpts1, x1);
-								Append(farcpts2, x2);
-							}
-
-							//if (farch1)
-							//	Progress.Delete(farch1);
-							//if (farch2)
-							//	Progress.Delete(farch2);
-
-							if (farcpts1.rows() != 0)
-								farch1 = Progress.Plot(farcpts1, RGB(255, 0, 255), -3);
-							if (farcpts2.rows() != 0)
-								farch2 = Progress.Plot(farcpts2, RGB(255, 0, 0), -3);
-						}
-
-						Progress.Unhold();
+						PlotAllPlacements(fragh, c1, farch1, farch2);
 						//Sleep(500);
 
 						bProgress = true;
@@ -1283,13 +1315,6 @@ void PlacePieces()
 
 		/*
 		*/
-	}
-	Progress.Erase();
-	for (int c2 = 0; c2 < Placements.size(); c2++)
-	{
-		PlotPlacement(Placements[c2]);
-		//Curve x = Pieces[Placements[c2].m_nPiece].m_Contour;
-		//Progress.Plot(TransformCurve(x, Placements[c2].m_gLock), RGB(0,0,0), 1);
 	}
 }
 

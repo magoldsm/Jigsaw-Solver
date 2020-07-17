@@ -171,7 +171,7 @@ void CPlot::OnPaint()
 	CFont* pDefaultGUIFont = CFont::FromHandle((HFONT)GetStockObject(DEFAULT_GUI_FONT));
 	LOGFONT lf;
 	pDefaultGUIFont->GetLogFont(&lf);
-	lf.lfHeight = 36;
+	lf.lfHeight = 18;
 
 	CFont fontDraw;
 	fontDraw.CreateFontIndirect(&lf);

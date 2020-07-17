@@ -106,6 +106,10 @@
 #define IDC_DUMP_FIT_BEFORE_QSORT       1095
 #define IDC_LIST1                       1096
 #define IDC_SCORES                      1096
+#define IDC_CONFORM_BEFORE_PLACING      1097
+#define IDC_LOAD_PARAMS                 1098
+#define IDC_BUTTON2                     1099
+#define IDC_SAVE_PARAMS                 1099
 
 // Next default values for new objects
 // 
@@ -113,7 +117,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1097
+#define _APS_NEXT_CONTROL_VALUE         1099
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

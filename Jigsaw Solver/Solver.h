@@ -29,6 +29,23 @@
 
 using Curve = Eigen::Matrix<double, -1, 2>;
 
+//using Vector5d = Eigen::Matrix<double, 5, 1>;
+
+class Vector5d : public Eigen::Matrix<double, 5, 1>
+{
+public:
+	Vector5d() : Eigen::Matrix<double, 5, 1>() {}
+
+	Vector5d(double d1, double d2, double d3, double d4, double d5) : Eigen::Matrix<double, 5, 1>()
+	{
+		(*this)(0) = d1;
+		(*this)(1) = d2;
+		(*this)(2) = d3;
+		(*this)(3) = d4;
+		(*this)(4) = d5;
+	}
+};
+
 //class Curve : public Eigen::Matrix<double, -1, 2>
 //{
 //	size_t size() = delete;

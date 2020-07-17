@@ -185,7 +185,7 @@ PlotDecomposition(CPiece& piece, int iPiece)
 
 		if (X < 0) X = 0;
 		if (Y < 0) Y = 0;
-		drawing.at<Vec3b>(X, Y) = Vec3b(255, 255, 255);
+		drawing.at<Vec3b>(Y, X) = Vec3b(255, 255, 255);
 		imshow("Decomposition", drawing);
 	//waitKey(1);
 	}
@@ -227,7 +227,7 @@ PlotDecomposition(CPiece& piece, int iPiece)
 			if (Y1 < 0) Y1 = 0;
 			if (X2 < 0) X2 = 0;
 			if (Y2 < 0) Y2 = 0;
-			line(drawing, Point(Y1, X1), Point(Y2, X2), Scalar(0, greenChan, redChan), 3);
+			line(drawing, Point(X1, Y1), Point(X2, Y2), Scalar(0, greenChan, redChan), 3);
 		}
 
 		redChan ^= 255;
@@ -238,7 +238,7 @@ PlotDecomposition(CPiece& piece, int iPiece)
 
 		char buff[1000];
 		sprintf_s(buff, sizeof(buff), "(%d  %d)", i, (int) contour.rows());
-		cv::putText(drawing, buff, Point(Y, X), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 2);
+		cv::putText(drawing, buff, Point(X, Y), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 2);
 	}
 
 	char buff[100];
@@ -249,14 +249,14 @@ PlotDecomposition(CPiece& piece, int iPiece)
 // Plot the dcomposition, showing each arc in alternating colors
 
 void
-PlotKappasDecomposition(CPiece& piece, double delta0, int iPiece)
+PlotSignatureDecomposition(CPiece& piece, int colKappa, double delta0, int iPiece)
 {
 	BATable& BA = piece.m_Arcs;
 	VectorXi& Pt2Arc = piece.m_Pt2Arc;
 
 	const int PlotSize = 900;
 
-	VectorXd norm = piece.m_Signature.col(1);
+	VectorXd norm = piece.m_Signature.col(colKappa);
 	int sz = (int)norm.rows();
 
 	double min, max;
@@ -288,6 +288,6 @@ PlotKappasDecomposition(CPiece& piece, double delta0, int iPiece)
 
 
 	char buff[100];
-	sprintf_s(buff, 100, "kappas decomp %d", iPiece);
+	sprintf_s(buff, 100, "kappa%s decomp %d", colKappa==0 ? "" : "s", iPiece);
 	imshow(buff, drawing);
 }

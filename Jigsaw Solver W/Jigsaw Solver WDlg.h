@@ -82,6 +82,7 @@ public:
 	afx_msg LRESULT OnSave(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnUnhold(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnNewScore(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnConfirmPlacement(WPARAM wParam, LPARAM lParam);
 
 	virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam);
 	void UpdateParameters();
@@ -90,4 +91,6 @@ public:
 	afx_msg void OnClose();
 //	afx_msg void OnBnClickedCheck1();
 	CListBox m_Scores;
+	afx_msg void OnBnClickedLoadParams();
+	afx_msg void OnBnClickedSaveParams();
 };

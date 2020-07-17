@@ -96,6 +96,7 @@ void CParameters::PutStringParam(const char * name, const char* value)
 CParameters::CParameters()
 	: m_bSave(false)
 	, m_bDumpFitBeforeQSort(FALSE)
+	, m_bConfirmBeforePlacing(FALSE)
 {
 	LSTATUS res = ::RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\WinStock Software\\", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &m_regKey, NULL);
 

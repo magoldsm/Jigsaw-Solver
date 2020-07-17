@@ -152,7 +152,8 @@ void Solver(const char* pszResume)
 				for (int i = 0; i < nPieces; i++)
 				{
 					PlotDecomposition(Pieces[i], i);
-					PlotKappasDecomposition(Pieces[i], delta0, i);
+					PlotSignatureDecomposition(Pieces[i], 0, delta1, i);
+					PlotSignatureDecomposition(Pieces[i], 1, delta0, i);
 					//	waitKey(1);
 				}
 			}

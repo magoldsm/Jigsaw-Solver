@@ -97,21 +97,12 @@ Convolve(const VectorXd& in, VectorXd& out, const VectorXd& filter)
 	int sgWindow = (int)filter.size() / 2;
 
 	FOR_START(i, 0, sz)
-	//tbb::parallel_for(size_t(0), size_t(sz), [&](int i)
-	//	//	for (int i = 0; i < sz; i++)
-	//{
-		if (i == 1931)
-		{
-			int q = 10;
-		}
 		out(i) = 0;
 		for (int j = -sgWindow; j <= sgWindow; j++)
 		{
 			int jIdx = (i + j + sz) % sz;
 			out(i) += in(jIdx) * filter(j + sgWindow);
 		}
-	//}
-	//);
 	FOR_END
 
 	int i=0;

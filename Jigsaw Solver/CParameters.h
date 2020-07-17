@@ -44,6 +44,7 @@ public:
 	BOOL m_bShowPScores;
 	BOOL m_bSave;
 	BOOL m_bDumpFitBeforeQSort;
+	BOOL m_bConfirmBeforePlacing;
 
 	char m_szPlotLevel[100];
 

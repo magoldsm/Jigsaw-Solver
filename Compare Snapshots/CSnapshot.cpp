@@ -12,7 +12,7 @@ void CSnapshot::DumpScores()
 {
 	for (CPlacement p : m_Placements)
 	{
-		AlwaysOutput("%3d  %f %f %f %f\n", p.m_nPiece, p.m_Score(0), p.m_Score(1), p.m_Score(2), p.m_Score(3));
+		AlwaysOutput("%3d  %f %f %f %f\n", p.m_nPiece, p.m_Score(0), p.m_Score(1), p.m_Score(2), p.m_Score(3), p.m_Score(4));
 	}
 }
 
@@ -252,6 +252,7 @@ void CSnapshot::Compare(const CSnapshot& other) const
 		CHECKDi(i, m_Placements[i].m_Score[1]);
 		CHECKDi(i, m_Placements[i].m_Score[2]);
 		CHECKDi(i, m_Placements[i].m_Score[3]);
+		CHECKDi(i, m_Placements[i].m_Score[4]);
 		CHECKDi(i, m_Placements[i].m_gLock.theta);
 		CHECKDi(i, m_Placements[i].m_gLock.dx);
 		CHECKDi(i, m_Placements[i].m_gLock.dy);

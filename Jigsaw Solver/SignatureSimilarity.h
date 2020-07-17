@@ -68,7 +68,7 @@ public:
 class CPlacement
 {
 public:
-	CPlacement(int nPiece, const Eigen::Vector4d& Score, const GTransform& gLock, const CFit& Fit)
+	CPlacement(int nPiece, const Vector5d& Score, const GTransform& gLock, const CFit& Fit)
 		: m_nPiece(nPiece)
 		, m_Score(std::move(Score))
 		, m_gLock(std::move(gLock))
@@ -78,7 +78,7 @@ public:
 	}
 	CPlacement(CArchive& ar);
 	int								m_nPiece;
-	Eigen::Vector4d					m_Score;
+	Vector5d						m_Score;
 	GTransform						m_gLock;
 	CFit							m_Fit;
 	std::vector<int>				m_Neighbors;
@@ -88,6 +88,8 @@ public:
 private:
 	
 };
+
+void PlotAllPlacements(const LRESULT& fragh, int c1, LRESULT& farch1, LRESULT& farch2);
 
 void PlacePieces();
 

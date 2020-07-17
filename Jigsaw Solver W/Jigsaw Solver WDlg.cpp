@@ -90,6 +90,11 @@ void CProgress::NewScores()
 	::SendMessage(m_hWndGUI, WM_NEW_SCORE, 0, 0L);
 }
 
+LRESULT CProgress::ConfirmPlacement(const char* szMessage)
+{
+	return ::SendMessage(m_hWndGUI, WM_CONFIRM_PLACEMENT, 0, (LPARAM) szMessage);
+}
+
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -230,6 +235,7 @@ void CJigsawSolverWDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECKING_FITS_REMAINING, m_remainingChecking);
 	DDX_Check(pDX, IDC_DUMP_FIT_BEFORE_QSORT, m_bDumpFitBeforeQSort);
 	DDX_Control(pDX, IDC_SCORES, m_Scores);
+	DDX_Check(pDX, IDC_CONFORM_BEFORE_PLACING, m_bConfirmBeforePlacing);
 }
 
 BEGIN_MESSAGE_MAP(CJigsawSolverWDlg, CDialogEx)
@@ -246,9 +252,12 @@ BEGIN_MESSAGE_MAP(CJigsawSolverWDlg, CDialogEx)
 	ON_MESSAGE(WM_SAVE, &CJigsawSolverWDlg::OnSave)
 	ON_MESSAGE(WM_UNHOLD, &CJigsawSolverWDlg::OnUnhold)
 	ON_MESSAGE(WM_NEW_SCORE, &CJigsawSolverWDlg::OnNewScore)
+	ON_MESSAGE(WM_CONFIRM_PLACEMENT, &CJigsawSolverWDlg::OnConfirmPlacement)
 	ON_BN_CLICKED(IDC_PAUSE, &CJigsawSolverWDlg::OnBnClickedPause)
 	ON_BN_CLICKED(IDC_RESUME, &CJigsawSolverWDlg::OnBnClickedResume)
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_LOAD_PARAMS, &CJigsawSolverWDlg::OnBnClickedLoadParams)
+	ON_BN_CLICKED(IDC_SAVE_PARAMS, &CJigsawSolverWDlg::OnBnClickedSaveParams)
 END_MESSAGE_MAP()
 
 
@@ -552,11 +561,22 @@ LRESULT CJigsawSolverWDlg::OnNewScore(WPARAM wParam, LPARAM lParam)
 	{
 		CString str;
 		CPlacement& p = Placements[nElements++];
-		str.Format(_T("%3d  %.3f  %.3f  %.3f  %.3f"), p.m_nPiece, p.m_Score(0), p.m_Score(1), p.m_Score(2), p.m_Score(3));
+		str.Format(_T("%3d  %.3f  %.3f  %.3f  %.3f"), p.m_nPiece, p.m_Score(0), p.m_Score(1), p.m_Score(2), p.m_Score(3), p.m_Score(4));
 		m_Scores.AddString(str);
 	}
 
 	return 0;
+}
+
+
+LRESULT CJigsawSolverWDlg::OnConfirmPlacement(WPARAM wParam, LPARAM lParam)
+{
+	const char* pszMessage = (const char*)lParam;
+	CString strMess;
+	strMess.Format(_T("%hs\nAccept Placement?"), pszMessage);
+
+	auto res = ::AfxMessageBox(strMess, MB_YESNO | MB_ICONQUESTION);
+	return res;
 }
 
 
@@ -648,10 +668,23 @@ void CJigsawSolverWDlg::OnBnClickedResume()
 void CJigsawSolverWDlg::OnClose()
 {
 #ifdef USE_WINTHREADS
-	m_SolverThread->SuspendThread();
+	if (m_SolverThread)
+		m_SolverThread->SuspendThread();
 #else
 #endif
 
 	__super::OnClose();
 }
 
+
+
+void CJigsawSolverWDlg::OnBnClickedLoadParams()
+{
+	// TODO: Add your control notification handler code here
+}
+
+
+void CJigsawSolverWDlg::OnBnClickedSaveParams()
+{
+	// TODO: Add your control notification handler code here
+}

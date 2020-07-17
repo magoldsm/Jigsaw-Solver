@@ -264,7 +264,7 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	double r2 = normSquared.sum();
 	double rINF = normSquared.array().sqrt().maxCoeff();
 
-	if (bPlot)
+	if (bPlot/* || pParams->m_bConfirmBeforePlacing*/)
 	{
 		if (debugh)
 			Progress.Delete(debugh);
@@ -277,7 +277,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 			Progress.Delete(debughtilde);
 
 		debughtilde = Progress.Plot(debugEtildeDeltaK1, RGB(0, 255, 0), -3);
-		Sleep(5000);
 //#endif
 	}
 
@@ -360,7 +359,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 				Curve c = TransformCurveAboutCM(CDelta, gj, zCM);
 
 				plotHandle = Progress.Plot(c);
-				Sleep(100);
 			}
 
 			break;
@@ -393,7 +391,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 			c.rowwise() += zCM;
 
 			plotHandle = Progress.Plot(c);
-			Sleep(100);
 		}
 
 		// Step 7, termination condition
@@ -413,11 +410,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 	double K2dStar = pParams->m_dK2 * dStar;
 	double K3dStar = K3 * dStar;
-	//Matrix<bool, -1, 1> D2Sel(nCtilde);
-	//Matrix<bool, -1, 1> D3Sel(nCtilde);
-
-	//D2Sel.setConstant(false);
-	//D3Sel.setConstant(false);
 
 	VectorXb* test2 = new VectorXb[nC];;
 	VectorXb* test3 = new VectorXb[nC];
@@ -428,12 +420,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 	double* cdtrx = new double[nC];
 	double* cdtry = new double[nC];
-
-	//vector<VectorXb> test2, test3;
-	//vector<VectorXd> diff;
-	//test2.resize(nC);
-	//test3.resize(nC);
-	//diff.resize(nC);
 
 	D_Delta_2_Ics.resize(0);
 	Dtilde_Delta_2_Ics.resize(0);
@@ -452,29 +438,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	double K2dStarSquared = K2dStar * K2dStar;
 	double K3dStarSquared = K3dStar * K3dStar;
 
-#if 0
-	FOR_START(c2, 0, nC)
-		Vector2d temp = CDelta.row(c2).array() - zCM.array();
-		double cdtrx = (temp(0) * cosj - temp(1) * sinj) + dxj;
-		double cdtry = (temp(0) * sinj + temp(1) * cosj) + dyj;
-
-		double* ctdx = (double*) CtildeDelta.data();		// remove const from data()
-		double* ctdy = ctdx + nCtilde;
-		test2[c2].resize(nCtilde);
-		test3[c2].resize(nCtilde);
-		bool bTest2any = false;
-		bool bTest3any = false;
-
-		for (int i = 0; i < nCtilde; i++)
-		{
-			double d = (ctdx[i] - cdtrx)*(ctdx[i] - cdtrx) + (ctdy[i] - cdtry)*(ctdy[i] - cdtry);
-			/*bTest2any |= */(test2[c2][i] = d < K2dStarSquared);
-			/*bTest3any |= */(test3[c2][i] = d < K3dStarSquared);
-		}
-		bTest2Any[c2] = test2[c2].any();
-		bTest3Any[c2] = test3[c2].any();
-	FOR_END
-#else
 	for (int c2 = 0; c2 < nC; c2++)
 	{
 		test2[c2].resize(nCtilde);
@@ -489,46 +452,29 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	double* ctdx = (double*)CtildeDelta.data();		// remove const from data()
 	double* ctdy = ctdx + nCtilde;
 
-//#pragma loop( hint_parallel( 0 ) )
-//	for (int c2 = 0; c2 < nC; c2++)
-//	{
-//		tempx[c2] = pCDeltaX[c2] - zCMx;
-//		double cdtrx = (tempx[c2] * cosj - tempy[c2] * sinj) + dxj;
-//		double cdtry = (tempx[c2] * sinj + tempy[c2] * cosj) + dyj;
-//
-//		VectorXb& test2c2 = test2[c2];
-//		VectorXb& test3c2 = test3[c2];
-//	}
-
-	//for (int c2 = 0; c2 < nC; c2++)
-	//{
-		FOR_START(c2, 0, nC)
+	FOR_START(c2, 0, nC)
 		tempx[c2] = pCDeltaX[c2] - zCMx;
 		tempy[c2] = pCDeltaY[c2] - zCMy;
 		cdtrx[c2] = (tempx[c2] * cosj - tempy[c2] * sinj) + dxj;
 		cdtry[c2] = (tempx[c2] * sinj + tempy[c2] * cosj) + dyj;
 
-		FOR_END
-	//}
-#endif
-			FOR_START(c2, 0, nC)
-		//	for (int c2 = 0; c2 < nC; c2++)
-		//{
-			VectorXb& test2c2 = test2[c2];
-			VectorXb& test3c2 = test3[c2];
+	FOR_END
 
-			for (int i = 0; i < nCtilde; i++)
-			{
-				double d = (ctdx[i] - cdtrx[c2]) * (ctdx[i] - cdtrx[c2]) + (ctdy[i] - cdtry[c2]) * (ctdy[i] - cdtry[c2]);
-				test2c2[i] = d < K2dStarSquared;
-				test3c2[i] = d < K3dStarSquared;
-			}
-			bTest2Any[c2] = test2[c2].any();
-			bTest3Any[c2] = test3[c2].any();
-			FOR_END
-//		}
+	FOR_START(c2, 0, nC)
+		VectorXb& test2c2 = test2[c2];
+		VectorXb& test3c2 = test3[c2];
 
-		//DebugOutput("-----------------------------------------\n");
+		for (int i = 0; i < nCtilde; i++)
+		{
+			double d = (ctdx[i] - cdtrx[c2]) * (ctdx[i] - cdtrx[c2]) + (ctdy[i] - cdtry[c2]) * (ctdy[i] - cdtry[c2]);
+			test2c2[i] = d < K2dStarSquared;
+			test3c2[i] = d < K3dStarSquared;
+		}
+		bTest2Any[c2] = test2[c2].any();
+		bTest3Any[c2] = test3[c2].any();
+	FOR_END
+	
+	//DebugOutput("-----------------------------------------\n");
 
 	for (int c2 = 0; c2 < nC; c2++)
 	{
@@ -563,9 +509,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	delete[] cdtrx;
 	delete[] cdtry;
 
-	if (nC == 492)
-		DebugOutput("Pre-Unique:  Dtilde_Delta_2_Ics has %d points, Dtilde_Delta_3_Ics has %d points\n", Dtilde_Delta_2_Ics.size(), Dtilde_Delta_3_Ics.size());
-
 
 	auto icmp = [](const void* p1, const void* p2)
 	{
@@ -583,9 +526,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 	it = unique(Dtilde_Delta_3_Ics.begin(), Dtilde_Delta_3_Ics.end(), ucmp);
 	Dtilde_Delta_3_Ics.resize(std::distance(Dtilde_Delta_3_Ics.begin(), it));
-
-	if (nC == 492)
-		DebugOutput("Post-Unique: Dtilde_Delta_2_Ics has %d points, Dtilde_Delta_3_Ics has %d points\n", Dtilde_Delta_2_Ics.size(), Dtilde_Delta_3_Ics.size());
 
 	if (bPlot)
 	{
