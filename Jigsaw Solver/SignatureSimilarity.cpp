@@ -873,22 +873,6 @@ void PlacePieces()
 		int piece1;							// Start with the "heaviest" piece.
 
 		double dummy = weights.maxCoeff(&piece1);
-		switch (nPieces)
-		{
-		case 8:
-			piece1 = 2;		// 8-piece cathedral
-			break;
-		case 69:
-			piece1 = 49;	// Baffler
-			break;
-		case 111:
-			piece1 = 49;	// Full cathedral
-			break;
-		default:
-			piece1 = 0;
-			break;
-		}
-		piece1 = 0;
 		Pieces[piece1].m_nActive = 1;
 
 		Tracker.back().SetSize(nPieces);

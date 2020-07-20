@@ -11,7 +11,7 @@ void MyNormv(Eigen::VectorXd& vec, double& dmin, double& dmax);
 void MyNormv(Eigen::VectorXd& vec);
 void PlotContours(std::vector<Curve>& Curves, const char* windowName, bool bOverlay);
 void Plot(const char* window, const Eigen::VectorXd& vec, double dDelta = 0.0, bool bAnimate = false);
-void circShift(const Eigen::VectorXd& vin, Eigen::VectorXd& vout, int shift);
+Eigen::VectorXd circShift(const Eigen::VectorXd& vin, int shift);
 void circShift(const Curve& min, Curve& mout, int shift);
 void MaxD(const std::vector<CPiece>& piece, Curve CPiece::*curve, double& width, double& height);
 bool IsMember(int s, std::vector<int> v);

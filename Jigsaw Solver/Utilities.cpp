@@ -117,9 +117,10 @@ void circShift(const Curve& min, Curve& mout, int shift)
 }
 
 
-void circShift(const VectorXd& vin, VectorXd& vout, int shift)
+VectorXd circShift(const VectorXd& vin, int shift)
 {
-	vout = vin;
+	VectorXd vout;
+	vout.resizeLike(vin);
 
 	int sz = (int)vin.size();
 
@@ -127,14 +128,14 @@ void circShift(const VectorXd& vin, VectorXd& vout, int shift)
 	{
 		vout.segment(-shift, sz + shift) = vin.segment(0, sz + shift);
 		vout.segment(0, -shift) = vin.segment(sz + shift, -shift);
-		return;
 	}
-	if (shift > 0)
+	else if (shift > 0)
 	{
 		vout.segment(0, sz - shift) = vin.segment(shift, sz - shift);
 		vout.segment(sz - shift, shift) = vin.segment(0, shift);
-		return;
 	}
+
+	return vout;
 }
 
 // Computes the bounding box that would hold all of the curves of all pieces.

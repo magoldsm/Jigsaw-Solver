@@ -120,7 +120,7 @@ void CPlot::OnPaint()
 		Curve& curve = *itcurve;
 
 		auto width = *itwidth;
-		bool bClose = width > 0;
+		bool bClose = width > 1;
 		width = std::abs(width);
 
 		CPen pen;
@@ -148,7 +148,7 @@ void CPlot::OnPaint()
 
 //			DebugOutput("%3d   %3d %3d\n", j, x, y);
 
-			if (dist > 20)
+			if (dist > 10)
 				dc.MoveTo(x, y);
 			else
 				dc.LineTo(x, y);
@@ -158,7 +158,7 @@ void CPlot::OnPaint()
 
 		double dist = sqrt((x - prevx)*(x - prevx) + (y - prevy)*(y - prevy))* xScale;
 //		DebugOutput("%3d   %3d %3d\n", j, x, y);
-		if (bClose && dist <= 20)
+		if (bClose && dist <= 10)
 			dc.LineTo(x, y);
 
 		dc.SelectObject(oldPen);

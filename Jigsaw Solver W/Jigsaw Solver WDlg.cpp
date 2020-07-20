@@ -200,10 +200,10 @@ void CJigsawSolverWDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_K37, m_K3[7]);
 	DDX_Text(pDX, IDC_JSTAR, m_nJStar);
 	if (!pDX->m_bSaveAndValidate)
-		m_PuzzleFile = m_szPath;
-	DDX_Text(pDX, IDC_PUZZLE_FILE, m_PuzzleFile);
+		m_strPuzzleFile = m_szPath;
+	DDX_Text(pDX, IDC_PUZZLE_FILE, m_strPuzzleFile);
 	if (pDX->m_bSaveAndValidate)
-		strcpy_s(m_szPath, sizeof(m_szPath), CT2A(m_PuzzleFile));
+		strcpy_s(m_szPath, sizeof(m_szPath), CT2A(m_strPuzzleFile));
 	DDX_Control(pDX, IDC_EUCLIDEAN_SIGNATURES, m_barEuclidean);
 	DDX_Control(pDX, IDC_BIVERTEX_ARC, m_barBivertex);
 	DDX_Control(pDX, IDC_PLACING_PIECES, m_barPlacing);
@@ -236,6 +236,7 @@ void CJigsawSolverWDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_DUMP_FIT_BEFORE_QSORT, m_bDumpFitBeforeQSort);
 	DDX_Control(pDX, IDC_SCORES, m_Scores);
 	DDX_Check(pDX, IDC_CONFORM_BEFORE_PLACING, m_bConfirmBeforePlacing);
+	DDX_Control(pDX, IDC_PUZZLE_FILE, m_PuzzleFile);
 }
 
 BEGIN_MESSAGE_MAP(CJigsawSolverWDlg, CDialogEx)
@@ -337,6 +338,8 @@ BOOL CJigsawSolverWDlg::OnInitDialog()
 	m_Plot.GetWindowRect(&rect);
 	ScreenToClient(&rect);
 	InvalidateRect(&rect, FALSE);
+
+	m_PuzzleFile.EnableFileBrowseButton(_T("csv"), _T("Puzzles (*.csv)|*.csv||"));
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -680,11 +683,34 @@ void CJigsawSolverWDlg::OnClose()
 
 void CJigsawSolverWDlg::OnBnClickedLoadParams()
 {
-	// TODO: Add your control notification handler code here
+	CFileDialog dlg(TRUE, _T(".prm"), NULL, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NOCHANGEDIR, _T("Saved Puzzles (*.prm)|*.prm||"));
+
+	if (dlg.DoModal() != IDOK)
+		return;
+
+	CFile file(dlg.GetPathName(), CFile::modeRead | CFile::typeBinary);
+	CArchive ar(&file, CArchive::load);
+
+	CParameters::Serialize(ar);
+
+	UpdateData(FALSE);
+
+	OnEnKillfocusJstar();
 }
 
 
 void CJigsawSolverWDlg::OnBnClickedSaveParams()
 {
-	// TODO: Add your control notification handler code here
+	UpdateData(TRUE);
+
+	CFileDialog dlg(FALSE, _T(".prm"), NULL, OFN_HIDEREADONLY | OFN_NOCHANGEDIR, _T("Saved Puzzles (*.prm)|*.prm||"));
+
+	if (dlg.DoModal() != IDOK)
+		return;
+
+	CFile file(dlg.GetPathName(), CFile::modeWrite | CFile::modeCreate | CFile::typeBinary);
+	CArchive ar(&file, CArchive::store);
+
+	CParameters::Serialize(ar);
+
 }

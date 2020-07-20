@@ -18,99 +18,97 @@ CalcEuclideanSignature(CPiece& piece, VectorXd smoothVec, VectorXd d1Vec, Vector
 	int sz = (int)contour.rows();
 	sig.resize(sz, 2);
 
-	VectorXd /*xraw(sz), yraw(sz), */x(sz), y(sz), dx(sz), dy(sz), d2x(sz), d2y(sz), Area(sz), d1mag(sz), dkappa(sz);
-
-//#define HOFF
-	/*
-
-b = sqrt(dx.^2+dy.^2);
-a = circshift(b,[1 0]); % one behind
-d = circshift(b,[-1 0]); % one ahead
-g = circshift(b,[ 2 0]); % 2 behind
-d2x = circshift(x,[-1 0]) - circshift(x,[1 0]);
-d2y = circshift(y, [-1 0]) -circshift(y,[1 0]);
-
-c = sqrt(d2x.^2+d2y.^2);
-
-% Compute signed area using the cross product
-
-va = [dx dy zeros(sz,1)];
-vb = [bdx bdy zeros(sz,1)];
-Area = .5*cross(va, vb);
-Area = Area(:, 3);
-
-% Compute approximate curvature
-kappa = 4*(Area)./(a.*b.*c);
-
-% Approximate arc length derivative of curvature
-kappad = circshift(kappa,[-1 0]) - kappa;
-kappad = (3/2)*((kappad)./(a+b+d) +  (circshift(kappad,[1 0]))./(a+b+g)); % Averaging 2 forward differences.
-
-% Assign output
-signature =  [kappa kappad];
-*/
+#define HOFF
 
 #ifdef HOFF
-	VectorXd temp(sz), xm1(sz), ym1(sz), bdx(sz), bdy(sz), a(sz), b(sz), c(sz), d(sz), g(sz);
+	VectorXd dx(sz), dy(sz), bdx(sz), bdy(sz), Area(sz), dkappa(sz);
 
-	bool bPlot = true;
+	dx = circShift(contour.col(0), -1) - contour.col(0);							// dx = circshift(x,[-1 0]) - x; % Forward difference
+	dy = circShift(contour.col(1), -1) - contour.col(1);							// dy = circshift(x,[-1 0]) - y; % Forward difference
+	bdx = -circShift(dx, 1);														// bdx = -circshift(dx, [1 0]);  % Backward difference
+	bdy = -circShift(dy, 1);														// bdy = -circshift(dy, [1 0]);  % Backward difference
 
-	circShift(contour.x, xm1, -1);
-	dx = xm1 - contour.x;
-	circShift(contour.y, ym1, -1);
-	dy = ym1 - contour.y;
-	circShift(dx, bdx, 1);
-	bdx = -bdx;
-	circShift(dy, bdy, 1);
-	bdy = -bdy;
+	VectorXd b = (dx.array().square() + dy.array().square()).sqrt();				// b = sqrt(dx. ^ 2 + dy. ^ 2);
+	VectorXd a = circShift(b, 1);													// a = circshift(b, [1 0]);      % one behind
+	VectorXd d = circShift(b, -1);													// d = circshift(b, [-1 0]);     % one ahead
+	VectorXd g = circShift(b, 2);													// g = circshift(b, [2 0]);      % 2 behind
+	VectorXd d2x = circShift(contour.col(0), -1) - circShift(contour.col(0), 1);	// d2x = circshift(x, [-1 0]) - circshift(x, [1 0]);
+	VectorXd d2y = circShift(contour.col(1), -1) - circShift(contour.col(1), 1);	// d2y = circshift(y, [-1 0]) - circshift(y, [1 0]);
 
-	if (bPlot)
-	{
-		Plot("x", contour.x);
-		Plot("y", contour.y);
-		Plot("dx", dx);
-		Plot("dy", dy);
-		Plot("bdx", bdx);
-		Plot("bdy", bdy);
-	}
+	VectorXd c = (d2x.array().square() + d2y.array().square()).sqrt();				// c = sqrt(d2x. ^ 2 + d2y. ^ 2);
 
-	b = (dx.array().square() + dy.array().square()).sqrt();
-	circShift(b, a, 1);
-	circShift(b, d, -1);
-	circShift(b, g, 2);
+	// % Compute signed area using the cross product
 
-	circShift(x, temp, 1);
-	d2x = xm1 - temp;
-	circShift(y, temp, 1);
-	d2y = ym1 - temp;
+	Area = 0.5 * (dx.array() * bdy.array() - dy.array() * bdx.array());				// va = [dx dy zeros(sz, 1)];
+																					// vb = [bdx bdy zeros(sz, 1)];
+																					// Area = .5 * cross(va, vb);
+																					// Area = Area(:, 3);
 
-	c = (d2x.array().square() + d2y.array().square()).sqrt();
+	// % Compute approximate curvature
 
-	Area = 0.5*(dx.array() * bdy.array() - dy.array() * bdx.array());
+	sig.col(0) = 4.0 * Area.array() / (a.array() * b.array() * c.array());			// kappa = 4 * (Area). / (a.*b.*c);
 
-	if (bPlot) Plot("Area", Area);
+	// % Approximate arc length derivative of curvature
 
-	sig.col(0) = 4 * Area.array() / (a.array()*b.array() * c.array());
+	dkappa = circShift(sig.col(0), -1) - sig.col(0);								// kappad = circshift(kappa, [-1 0]) - kappa;
 
-	circShift(sig.col(0), temp, -1);
-	sig.col(1) = temp - sig.col(0);
-	circShift(sig.col(1), temp, 1);
-	sig.col(1) = 1.5*(sig.col(1).array() / (a + b + c).array() + temp.array() / (a + b + g).array());
+	// kappad = (3 / 2) * ((kappad). / (a + b + d) + (circshift(kappad, [1 0])). / (a + b + g));% Averaging 2 forward differences.
+	sig.col(1) = 1.5 * (dkappa.array() / (a.array() + b.array() + d.array()) + circShift(dkappa, 1).array() / (a.array() + b.array() + g.array()));
+		
+		
+	//	VectorXd temp(sz), xm1(sz), ym1(sz), bdx(sz), bdy(sz), a(sz), b(sz), c(sz), d(sz), g(sz);
 
-	if (bPlot) Plot("kappa", sig.col(0));
-	if (bPlot) Plot("kappas", sig.col(1));
+	//bool bPlot = true;
 
-	waitKey(0);
+	//circShift(contour.x, xm1, -1);
+	//dx = xm1 - contour.x;
+	//circShift(contour.y, ym1, -1);
+	//dy = ym1 - contour.y;
+	//circShift(dx, bdx, 1);
+	//bdx = -bdx;
+	//circShift(dy, bdy, 1);
+	//bdy = -bdy;
 
-#else
-	//for (int i = 0; i < sz; i++)
+	//if (bPlot)
 	//{
-	//	contour.row(0)[i] = (int) (rect.width*(1 + cos(i * 2 * 3.1415926 / sz)) / 2);
-	//	contour.row(1)[i] = (int) (rect.height*(1 + sin(i * 2 * 3.1415926 / sz)) / 2);
+	//	Plot("x", contour.x);
+	//	Plot("y", contour.y);
+	//	Plot("dx", dx);
+	//	Plot("dy", dy);
+	//	Plot("bdx", bdx);
+	//	Plot("bdy", bdy);
 	//}
 
-	//xraw = contour.row(0);
-	//yraw = contour.row(1);
+	//b = (dx.array().square() + dy.array().square()).sqrt();
+	//circShift(b, a, 1);
+	//circShift(b, d, -1);
+	//circShift(b, g, 2);
+
+	//circShift(x, temp, 1);
+	//d2x = xm1 - temp;
+	//circShift(y, temp, 1);
+	//d2y = ym1 - temp;
+
+	//c = (d2x.array().square() + d2y.array().square()).sqrt();
+
+	//Area = 0.5*(dx.array() * bdy.array() - dy.array() * bdx.array());
+
+	//if (bPlot) Plot("Area", Area);
+
+	//sig.col(0) = 4 * Area.array() / (a.array()*b.array() * c.array());
+
+	//circShift(sig.col(0), temp, -1);
+	//sig.col(1) = temp - sig.col(0);
+	//circShift(sig.col(1), temp, 1);
+	//sig.col(1) = 1.5*(sig.col(1).array() / (a + b + c).array() + temp.array() / (a + b + g).array());
+
+	//if (bPlot) Plot("kappa", sig.col(0));
+	//if (bPlot) Plot("kappas", sig.col(1));
+
+	//waitKey(0);
+
+#else
+	VectorXd x(sz), y(sz), dx(sz), dy(sz), d2x(sz), d2y(sz), Area(sz), d1mag(sz), dkappa(sz);
 
 	// Smooth the contour to overcome the effects of digitization.
 

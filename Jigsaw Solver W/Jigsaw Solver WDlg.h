@@ -41,7 +41,8 @@ public:
 	std::thread* m_SolverThread;
 #endif
 
-	CString m_PuzzleFile;
+	CString m_strPuzzleFile;
+	CMFCEditBrowseCtrl m_PuzzleFile;
 	CProgressCtrl m_barEuclidean;
 	CProgressCtrl m_barBivertex;
 	CProgressCtrl m_barPlacing;
