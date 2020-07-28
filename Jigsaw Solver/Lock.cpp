@@ -47,13 +47,10 @@ OUTPUTS
 */
 
 inline static Matrix<double, 1, 2>
- TransformPointAboutCM(Vector2d point, const GTransform& trans, Vector2d cm)
+ TransformPointAboutCM(Vector2d point, const GTransform& trans, double s, double c, Vector2d cm)
 {
 	Vector2d result;
 	Vector2d xx = point.array() - cm.array();
-
-	double c = cos(trans.theta);
-	double s = sin(trans.theta);
 
 	result[0] = (xx(0) * c - xx(1) * s) + trans.dx + cm[0];
 	result[1] = (xx(0) * s + xx(1) * c) + trans.dy + cm[1];
@@ -142,6 +139,8 @@ void
 Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock, double K3, Indices& D_Delta_3_Ics, Indices& Dtilde_Delta_3_Ics, Indices& D_Delta_2_Ics, Indices& Dtilde_Delta_2_Ics, bool bPlot, LRESULT& plotHandle)
 {
 	GTransform& g0 = fit.m_gFit;
+	double g0Sin = sin(g0.theta);
+	double g0Cos = cos(g0.theta);
 
 	Pauser.Lock();
 	Pauser.Unlock();
@@ -159,8 +158,10 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	LRESULT debugh = 0;
 	LRESULT debughtilde = 0;
 
-	if (bPlot)
+	if (bPlot) {
 		inith = Progress.Plot(TransformCurve(CDelta, g0));
+		Sleep(50);
+	}
 
 	circShift(CDelta, CDeltam1, -1);
 
@@ -181,11 +182,17 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	Matrix<bool, -1, -1> bNearby;
 	bNearby.resize(CtildeDelta.rows(), CDelta.rows());
 
+//	auto start = std::chrono::high_resolution_clock::now();
+
 	FOR_START(c1, 0, nC)
-		bNearby.col(c1) = (CtildeDelta.rowwise() - TransformPointAboutCM(CDelta.row(c1), g0, Vector2d(0, 0))).rowwise().norm().array() < dStarK1;
+		bNearby.col(c1) = (CtildeDelta.rowwise() - TransformPointAboutCM(CDelta.row(c1), g0, g0Sin, g0Cos, Vector2d(0, 0))).rowwise().norm().array() < dStarK1;
 	FOR_END
 
-		// The goal is now to create 2 sets: EDeltaK1 and EtildeDeltaK1.
+	//auto end = std::chrono::high_resolution_clock::now();
+	//std::chrono::duration<double, std::micro> elapsed = end - start;
+	//AlwaysOutput("nC = %d   %.f us.  %.3f/iteration\n", nC, elapsed.count(), ((double)elapsed.count())/((double)nC));
+
+	// The goal is now to create 2 sets: EDeltaK1 and EtildeDeltaK1.
 		//
 		// EDeltaK1			is the set of points from CDelta that interact with CtildeDelta.
 
@@ -278,6 +285,7 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 		debughtilde = Progress.Plot(debugEtildeDeltaK1, RGB(0, 255, 0), -3);
 //#endif
+		Sleep(50);
 	}
 
 	// Convert g_0 from the form used in Assemble() (rotation around the
@@ -294,6 +302,8 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	MatrixXd translation = rot * zCMt - zCMt + Vector2d(g0.dx, g0.dy);
 
 	GTransform gj(g0.theta, translation(0), translation(1));
+	double gjSin = sin(gj.theta);
+	double gjCos = cos(gj.theta);
 	RowVector2d wj = zCMt + translation;
 
 	// Perform iterative pertubation
@@ -312,7 +322,8 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 		for (int c2 = 0; c2 < nEDeltas; c2++)
 		{
-			RowVector2d EDeltaK1Transformed = TransformPointAboutCM(EDeltaK1.row(c2), gj, zCM);
+			// Pull this out of the loop and call TransformCurveAboutCM
+			RowVector2d EDeltaK1Transformed = TransformPointAboutCM(EDeltaK1.row(c2), gj, gjSin, gjCos, zCM);
 			MatrixXd diff = EtildeDeltaK1[c2].rowwise() - EDeltaK1Transformed;
 			VectorXd diffNorm = diff.rowwise().norm();
 			Aj[c2] = diffNorm.minCoeff();
@@ -321,9 +332,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 			if (Aj[c2] >= dStarK4)
 			{
-				//VectorXd denom = (diffNorm.array().pow(pParams->m_nNu) + pParams->m_dEpsilon).array() * diffNorm.array();
-				//MatrixXd ffjj = diff.array().colwise() / denom.array();
-				//Vector2d FJ = ffjj.colwise().sum();
 				Vector2d fj = (diff.array().colwise() / (diffNorm.array().pow(pParams->m_nNu + 1) + pParams->m_dEpsilon * diffNorm.array())).colwise().sum();
 				fTotj.array() += fj.array();
 				RowVector2d t = EDeltaK1Transformed - wj;
@@ -397,9 +405,9 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 		if ((thetaj * ThetaJm1 < 0 && cj[0] * cJm1[0] < 0 && cj[1] * cJm1[1] < 0))
 		{
-			if (bSeenOneTerminationCondition)
+		//	if (bSeenOneTerminationCondition)
 				break;
-			bSeenOneTerminationCondition = true;
+		//	bSeenOneTerminationCondition = true;
 		}
 
 		ThetaJm1 = thetaj;
@@ -411,6 +419,21 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	double K2dStar = pParams->m_dK2 * dStar;
 	double K3dStar = K3 * dStar;
 
+	//auto start = std::chrono::high_resolution_clock::now();
+#ifdef OPT
+	if (nC > 1000)
+		__debugbreak();
+
+	VectorXb test2[1000];
+	VectorXb test3[1000];
+
+	Vector2d temp[1000];
+	double tempx[1000];
+	double tempy[1000];
+
+	double cdtrx[1000];
+	double cdtry[1000];
+#else
 	VectorXb* test2 = new VectorXb[nC];;
 	VectorXb* test3 = new VectorXb[nC];
 
@@ -420,6 +443,11 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 	double* cdtrx = new double[nC];
 	double* cdtry = new double[nC];
+#endif
+
+	//auto end = std::chrono::high_resolution_clock::now();
+	//std::chrono::duration<double, std::micro> elapsed = end - start;
+	//AlwaysOutput("malloc   %.3f us.n\n", elapsed.count());
 
 	D_Delta_2_Ics.resize(0);
 	Dtilde_Delta_2_Ics.resize(0);
@@ -452,13 +480,14 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	double* ctdx = (double*)CtildeDelta.data();		// remove const from data()
 	double* ctdy = ctdx + nCtilde;
 
-	FOR_START(c2, 0, nC)
+	// Loop is 15x faster NOT using TBB
+
+	for (int c2 = 0; c2 < nC; c2++) {
 		tempx[c2] = pCDeltaX[c2] - zCMx;
 		tempy[c2] = pCDeltaY[c2] - zCMy;
 		cdtrx[c2] = (tempx[c2] * cosj - tempy[c2] * sinj) + dxj;
 		cdtry[c2] = (tempx[c2] * sinj + tempy[c2] * cosj) + dyj;
-
-	FOR_END
+	}
 
 	FOR_START(c2, 0, nC)
 		VectorXb& test2c2 = test2[c2];
@@ -501,6 +530,7 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 		}
 	}
 
+#ifndef OPT
 	delete[] test2;
 	delete[] test3;
 	delete[] temp;
@@ -508,7 +538,7 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	delete[] tempy;
 	delete[] cdtrx;
 	delete[] cdtry;
-
+#endif
 
 	auto icmp = [](const void* p1, const void* p2)
 	{

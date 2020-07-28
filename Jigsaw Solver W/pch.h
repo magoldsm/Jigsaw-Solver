@@ -26,6 +26,7 @@
 
 
 #include <afxdisp.h>        // MFC Automation classes
+#include <afxstr.h>
 
 
 

@@ -69,7 +69,7 @@ void CPScoreDlg::InitPieces()
 		{
 			Eigen::MatrixXd& a = m_PScore(i, j);
 			CString strVal;
-			strVal.Format(_T("%dx%d"), a.rows(), a.cols());
+			strVal.Format(_T("%ldx%ld"), a.rows(), a.cols());
 			m_Grid.SetItemText(i + 1, j + 1, strVal);
 		}
 	}

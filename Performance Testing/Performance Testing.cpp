@@ -2,7 +2,7 @@
 //
 
 #include <iostream>
-#include "Eigen/Dense"
+//#include "Eigen/Dense"
 #include <vector>
 
 struct GTransform
@@ -14,30 +14,39 @@ struct GTransform
 	double		dy;
 };
 
-
-class CFit
+class TwoPieces
 {
 public:
-	CFit() : m_Size(0), m_Slot(0), m_Score(-1), m_Pieces(-1, -1) {}
+	int		pieces[2];
 
-	void MeanOfAngles();								// Go through m_ArcTrans, eliminate outliers and compute m_gFit.theta
-
-	Eigen::Vector2i					m_Pieces;
-	int								m_Size;
-	Eigen::MatrixX2i				m_Arcs;				// Rows given by m_Size
-	std::vector<GTransform>			m_ArcTrans;			// Rows given by m_Size
-	GTransform						m_gFit;
-	double							m_Score;
-	int								m_Slot;
-
-	void Dump(int nIdx, std::ofstream& file);
-
-	static void Dump(const char* pszFilename);
+	int& operator[](int i) { return pieces[i]; }
+	//TwoPieces& operator=(TwoPieces& src) { }
 };
+
+
+//class CFit
+//{
+//public:
+//	CFit() : m_Size(0), m_Slot(0), m_Score(-1) { m_Pieces[0] = -1; m_Pieces[1] = -1; }
+//
+//	void MeanOfAngles();								// Go through m_ArcTrans, eliminate outliers and compute m_gFit.theta
+//
+//	TwoPieces						m_Pieces;
+//	int								m_Size;
+//	Eigen::MatrixX2i				m_Arcs;				// Rows given by m_Size
+//	std::vector<GTransform>			m_ArcTrans;			// Rows given by m_Size
+//	GTransform						m_gFit;
+//	double							m_Score;
+//	int								m_Slot;
+//
+//	void Dump(int nIdx, std::ofstream& file);
+//
+//	static void Dump(const char* pszFilename);
+//};
 
 int main()
 {
-	Eigen::Vector2i a, b;
+	TwoPieces a, b = { 1, 2 };
 
 	a = b;
 

@@ -16,13 +16,13 @@ public:
 
 	void ReadIn();
 	void DumpScores();
-	void Compare(const CSnapshot& other) const;
+	void Compare(CSnapshot& other);
 
 private:
 	CString		m_strFilename;
 
 	double						m_AverageLength;
-	long							m_AverageSize;
+	long						m_AverageSize;
 	double						m_Dx;
 	double						m_Dy;
 	double						m_Dkappa;

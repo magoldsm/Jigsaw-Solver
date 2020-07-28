@@ -9,6 +9,7 @@ using namespace cv;
 using namespace Eigen;
 
 CPiece::CPiece()
+	:m_Weight(0)
 {
 }
 

@@ -34,7 +34,13 @@ CProgress Progress(N_PROGRESS);
 
 void CProgress::UpdateReport()
 {
-	::PostMessage(m_hWndGUI, WM_PROGRESS, 0, 0L);
+	ULONGLONG time = ::GetTickCount64();
+
+	//if ((time - m_LastTimeUpdated) > 1000)
+	//{
+		::PostMessage(m_hWndGUI, WM_PROGRESS, 0, 0L);
+	//	m_LastTimeUpdated = time;
+	//}
 }
 
 
@@ -564,7 +570,7 @@ LRESULT CJigsawSolverWDlg::OnNewScore(WPARAM wParam, LPARAM lParam)
 	{
 		CString str;
 		CPlacement& p = Placements[nElements++];
-		str.Format(_T("%3d  %.3f  %.3f  %.3f  %.3f"), p.m_nPiece, p.m_Score(0), p.m_Score(1), p.m_Score(2), p.m_Score(3), p.m_Score(4));
+		str.Format(_T("%3d  %.3f  %.3f  %.3f  %.3f  %.3f"), p.m_nPiece, p.m_Score(0), p.m_Score(1), p.m_Score(2), p.m_Score(3), p.m_Score(4));
 		m_Scores.AddString(str);
 	}
 
@@ -586,7 +592,7 @@ LRESULT CJigsawSolverWDlg::OnConfirmPlacement(WPARAM wParam, LPARAM lParam)
 LRESULT CJigsawSolverWDlg::OnSave(WPARAM wParam, LPARAM lParam)
 {
 	CString strFilename;
-	strFilename.Format(_T("CurrentPuzzleData%04d.spz"), Placements.size());
+	strFilename.Format(_T("CurrentPuzzleData%04ld.spz"), Placements.size());
 
 	CFile file(strFilename, CFile::modeWrite | CFile::typeBinary | CFile::modeCreate);
 	CArchive ar(&file, CArchive::store);

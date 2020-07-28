@@ -61,10 +61,9 @@ void BivertexArcDecomposition(CPiece& piece, double delta0, double delta1)
 			nA = nA + toggler;
 			flipper = flipper + (toggler + 1) & 1;
 		}
-		else if ((abs(kappas[c1]) > delta0 &&
-			abs(kappas[(c1 + 1) % n1]) > delta0 &&
-			(kappas[c1] * kappas[(c1 + 1) % n1]) < 0)
-			|| ((abs(kappas[c1]) - abs(kappas[(c1 - 1 + n1) % n1]) < 0 && abs(kappas[c1]) - abs(kappas[c1]) > 0)))
+		else if (abs(kappas[c1]) > delta0 && abs(kappas[(c1 + 1) % n1]) > delta0 &&
+			(kappas[c1] * kappas[(c1 + 1) % n1] < 0
+			|| (abs(kappas[c1]) - abs(kappas[(c1 - 1 + n1) % n1]) < 0 && abs(kappas[(c1 + 1) % n1]) - abs(kappas[c1]) > 0)))
 		{
 			//cout << "b  " << c1 << " | " << nA << " | " << toggler << " | " << shifter << " | " << flipper << " | " << ((nA + shifter /*+ 1 */ + flipper) & 1) << endl;
 			BAIndices(nA, (nA + shifter /*+ 1 */ + flipper) & 1) = c1;
@@ -91,7 +90,7 @@ void BivertexArcDecomposition(CPiece& piece, double delta0, double delta1)
 
 
 	// Reject arcs not meeting delta1 cut - off
-	int c1 = 1;
+	int c1 = 0;
 	while (c1 < nA)
 	{
 		if (max(abs(kappa(BAIndices(c1, 1))), abs(kappa(BAIndices(c1, 0)))) < delta1)
@@ -120,23 +119,23 @@ void BivertexArcDecomposition(CPiece& piece, double delta0, double delta1)
 
 	if (s > e)
 	{
-		BA(0).m_Contour.resize(nTail + e, 2);
-		BA(0).m_Signature.resize(nTail + e, 2);
-		BA(0).m_Contour.col(0) << contour.col(0).tail(nTail), contour.col(0).head(e);
-		BA(0).m_Contour.col(1) << contour.col(1).tail(nTail), contour.col(1).head(e);
-		BA(0).m_Signature.col(0) << signature.col(0).tail(nTail), signature.col(0).head(e);
-		BA(0).m_Signature.col(1) << signature.col(1).tail(nTail), signature.col(1).head(e);
+		BA(0).m_Contour.resize(nTail + e+1, 2);
+		BA(0).m_Signature.resize(nTail + e+1, 2);
+		BA(0).m_Contour.col(0) << contour.col(0).tail(nTail), contour.col(0).head(e+1);
+		BA(0).m_Contour.col(1) << contour.col(1).tail(nTail), contour.col(1).head(e+1);
+		BA(0).m_Signature.col(0) << signature.col(0).tail(nTail), signature.col(0).head(e+1);
+		BA(0).m_Signature.col(1) << signature.col(1).tail(nTail), signature.col(1).head(e+1);
 		Pt2Arc.tail(nTail).setZero();
-		Pt2Arc.head(e).setZero();
+		Pt2Arc.head(e+1).setZero();
 	}
 	else
 	{
-		BA(0).m_Contour.resize((e - s) + 1, 2);
-		BA(0).m_Signature.resize((e - s) + 1, 2);
-		BA(0).m_Contour.col(0) = contour.col(0).segment(s, (e - s) + 1);
-		BA(0).m_Contour.col(1) = contour.col(1).segment(s, (e - s) + 1);
-		BA(0).m_Signature.col(0) = signature.col(0).segment(s, (e - s) + 1);
-		BA(0).m_Signature.col(1) = signature.col(1).segment(s, (e - s) + 1);
+		BA(0).m_Contour.resize((e - s) + 2, 2);
+		BA(0).m_Signature.resize((e - s) + 2, 2);
+		BA(0).m_Contour.col(0) = contour.col(0).segment(s, (e - s) + 2);
+		BA(0).m_Contour.col(1) = contour.col(1).segment(s, (e - s) + 2);
+		BA(0).m_Signature.col(0) = signature.col(0).segment(s, (e - s) + 2);
+		BA(0).m_Signature.col(1) = signature.col(1).segment(s, (e - s) + 2);
 		Pt2Arc.segment(s, (e - s) + 1).setZero();
 	}
 

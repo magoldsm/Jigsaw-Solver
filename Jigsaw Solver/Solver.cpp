@@ -7,6 +7,7 @@
 #include "Utilities.h"
 #include "SignatureSimilarity.h"
 #include "CPiece.h"
+#include <afx.h>
 
 using namespace std;
 using namespace Eigen;
@@ -21,6 +22,93 @@ extern double Dx, Dy, Dkappa, Dkappas;
 
 LARGE_INTEGER liStart, liFrequency, liSG, liEuclid, liBVD, liTotal;
 
+
+void WriteCurveCSV(Curve CPiece::* which, LPCTSTR pszFile)
+{
+	int nPieces = (int)Pieces.size();
+
+	CStdioFile file(pszFile, CFile::modeWrite | CFile::typeText | CFile::modeCreate);
+
+	for (int j = 0; j < nPieces; j++)
+	{
+		CString str;
+		str.Format(_T("%d,,"), j + 1);
+		file.WriteString(str);
+	}
+	file.WriteString(_T("\n"));
+
+
+	for (int i = 0; i < 10000; i++)
+	{
+		bool bDone = true;
+		for (int j = 0; j < nPieces; j++)
+		{
+			CPiece& piece = Pieces[j];
+			Curve& curve = piece.*which;
+
+			if (i < curve.rows())
+			{
+				CString str;
+				str.Format(_T("%.15g,%.15g,"), curve(i, 0), curve(i, 1));
+				file.WriteString(str);
+				bDone = false;
+			}
+			else
+			{
+				file.WriteString(_T(",,"));
+			}
+		}
+		file.WriteString(_T("\n"));
+
+		if (bDone)
+			break;
+	}
+
+	file.Close();
+}
+
+void WriteBVDCSV()
+{
+	int nPieces = (int)Pieces.size();
+
+	CStdioFile file(_T("BVD.csv"), CFile::modeWrite | CFile::typeText | CFile::modeCreate);
+
+	for (int j = 0; j < nPieces; j++)
+	{
+		CString str;
+		str.Format(_T("%d,"), j + 1);
+		file.WriteString(str);
+	}
+	file.WriteString(_T("\n"));
+
+	for (int i = 0; i < 10000; i++)
+	{
+		bool bDone = true;
+		for (int j = 0; j < nPieces; j++)
+		{
+			CPiece& piece = Pieces[j];
+			Eigen::VectorXi& pt2arc = piece.m_Pt2Arc;
+
+			if (i < pt2arc.rows())
+			{
+				CString str;
+				str.Format(_T("%d,"), pt2arc(i)+1);
+				file.WriteString(str);
+				bDone = false;
+			}
+			else
+			{
+				file.WriteString(_T(","));
+			}
+		}
+		file.WriteString(_T("\n"));
+
+		if (bDone)
+			break;
+	}
+
+	file.Close();
+}
 
 void Solver(const char* pszResume)
 {
@@ -86,10 +174,13 @@ void Solver(const char* pszResume)
 
 		FOR_START(i, 0, nPieces)
 			CalcEuclideanSignature(Pieces[i], smoothVec, d1Vec, d2Vec);
-		nDone += 1;
-		Progress(PROGRESS_EUCLID).m_Percent = 1.0*nDone / nPieces;
-		Progress.UpdateReport();
+			nDone += 1;
+			Progress(PROGRESS_EUCLID).m_Percent = 1.0*nDone / nPieces;
+			Progress.UpdateReport();
 		FOR_END
+
+//		WriteCurveCSV(&CPiece::m_Contour, _T("Contours.csv"));
+//		WriteCurveCSV(&CPiece::m_Signature, _T("Signatures.csv"));
 
 		for (int i = 0; i < nPieces; i++)
 		{
@@ -129,13 +220,15 @@ void Solver(const char* pszResume)
 
 		FOR_START(i, 0, nPieces)
 			BivertexArcDecomposition(Pieces[i], delta0, delta1/*, BA[i], Pt2Arc[i]*/);
-		nDone++;
-		Progress(PROGRESS_BIVERTEX).m_Percent = 1.0*nDone / nPieces;
-		Progress.UpdateReport();
+			nDone++;
+			Progress(PROGRESS_BIVERTEX).m_Percent = 1.0 * nDone / nPieces;
+			Progress.UpdateReport();
 		FOR_END
 
-			QueryPerformanceCounter(&liBVD);
+		QueryPerformanceCounter(&liBVD);
 		cout << "Bivertex Decomp " << (liBVD.QuadPart - liEuclid.QuadPart) / (1.0*liFrequency.QuadPart) << " seconds" << endl;
+
+//		WriteBVDCSV();
 	}
 
 	if (!bResume)

@@ -230,10 +230,13 @@ void CParameters::Serialize(CArchive & ar)
 		ar << m_dQ3;
 		ar << m_nJStar;
 
-		for (double var : m_P0) ar << var;
-		for (double var : m_M0) ar << var;
-		for (double var : m_MU0) ar << var;
-		for (double var : m_K3) ar << var;
+		for (int i = 0; i < 8; i++)
+		{
+			ar << m_P0[i];
+			ar << m_M0[i];
+			ar << m_MU0[i];
+			ar << m_K3[i];
+		}
 	}
 	else
 	{
@@ -263,9 +266,12 @@ void CParameters::Serialize(CArchive & ar)
 		ar >> m_dQ3;
 		ar >> m_nJStar;
 
-		for (double var : m_P0) ar >> var;
-		for (double var : m_M0) ar >> var;
-		for (double var : m_MU0) ar >> var;
-		for (double var : m_K3) ar >> var;
+		for (int i = 0; i < 8; i++)
+		{
+			ar >> m_P0[i];
+			ar >> m_M0[i];
+			ar >> m_MU0[i];
+			ar >> m_K3[i];
+		}
 	}
 }

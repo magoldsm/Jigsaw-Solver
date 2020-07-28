@@ -8,6 +8,24 @@ CPScore PScores;
 
 std::vector<CFit> Fits;
 
+#ifdef OPT
+CArchive& operator<<(CArchive& ar, TwoPieces& tp)
+{
+	ar << tp[0];
+	ar << tp[1];
+	return ar;
+}
+
+
+CArchive& operator>>(CArchive& ar, TwoPieces& tp)
+{
+	ar >> tp[0];
+	ar >> tp[1];
+	return ar;
+}
+#endif
+
+
 void CSnapshot::DumpScores()
 {
 	for (CPlacement p : m_Placements)
@@ -66,6 +84,15 @@ void CSnapshot::ReadIn()
 	{															\
 		CString strDiff;											\
 		strDiff.Format(_T("%s: %d %d"), _T(#x), x, other.x);		\
+		::AfxMessageBox(strDiff, MB_OK);							\
+	}														
+
+
+#define CHECKI64(x) \
+	if (x != other.x)											\
+	{															\
+		CString strDiff;											\
+		strDiff.Format(_T("%s: %ld %ld"), _T(#x), x, other.x);		\
 		::AfxMessageBox(strDiff, MB_OK);							\
 	}														
 
@@ -165,12 +192,12 @@ void CSnapshot::ReadIn()
 		}															\
     }
 
-void CSnapshot::Compare(const CSnapshot& other) const
+void CSnapshot::Compare(CSnapshot& other) 
 {
 	// Scalars
 
 	CHECKD(m_AverageLength);
-	CHECKD(m_AverageSize);
+	CHECKI(m_AverageSize);
 	CHECKD(m_Dx);
 	CHECKD(m_Dy);
 	CHECKD(m_Dkappa);
@@ -213,7 +240,7 @@ void CSnapshot::Compare(const CSnapshot& other) const
 
 	// Pieces
 
-	CHECKI(m_Pieces.size());
+	CHECKI64(m_Pieces.size());
 
 	for (int i = 0; i < m_Pieces.size(); i++)
 	{

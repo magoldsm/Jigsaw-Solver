@@ -46,66 +46,16 @@ CalcEuclideanSignature(CPiece& piece, VectorXd smoothVec, VectorXd d1Vec, Vector
 
 	// % Compute approximate curvature
 
-	sig.col(0) = 4.0 * Area.array() / (a.array() * b.array() * c.array());			// kappa = 4 * (Area). / (a.*b.*c);
+	sig.col(0) = -4.0 * Area.array() / (a.array() * b.array() * c.array());			// kappa = 4 * (Area). / (a.*b.*c);
 
 	// % Approximate arc length derivative of curvature
 
-	dkappa = circShift(sig.col(0), -1) - sig.col(0);								// kappad = circshift(kappa, [-1 0]) - kappa;
+	dkappa = sig.col(0) - circShift(sig.col(0), -1);								// kappad = circshift(kappa, [-1 0]) - kappa;
 
 	// kappad = (3 / 2) * ((kappad). / (a + b + d) + (circshift(kappad, [1 0])). / (a + b + g));% Averaging 2 forward differences.
 	sig.col(1) = 1.5 * (dkappa.array() / (a.array() + b.array() + d.array()) + circShift(dkappa, 1).array() / (a.array() + b.array() + g.array()));
 		
-		
-	//	VectorXd temp(sz), xm1(sz), ym1(sz), bdx(sz), bdy(sz), a(sz), b(sz), c(sz), d(sz), g(sz);
 
-	//bool bPlot = true;
-
-	//circShift(contour.x, xm1, -1);
-	//dx = xm1 - contour.x;
-	//circShift(contour.y, ym1, -1);
-	//dy = ym1 - contour.y;
-	//circShift(dx, bdx, 1);
-	//bdx = -bdx;
-	//circShift(dy, bdy, 1);
-	//bdy = -bdy;
-
-	//if (bPlot)
-	//{
-	//	Plot("x", contour.x);
-	//	Plot("y", contour.y);
-	//	Plot("dx", dx);
-	//	Plot("dy", dy);
-	//	Plot("bdx", bdx);
-	//	Plot("bdy", bdy);
-	//}
-
-	//b = (dx.array().square() + dy.array().square()).sqrt();
-	//circShift(b, a, 1);
-	//circShift(b, d, -1);
-	//circShift(b, g, 2);
-
-	//circShift(x, temp, 1);
-	//d2x = xm1 - temp;
-	//circShift(y, temp, 1);
-	//d2y = ym1 - temp;
-
-	//c = (d2x.array().square() + d2y.array().square()).sqrt();
-
-	//Area = 0.5*(dx.array() * bdy.array() - dy.array() * bdx.array());
-
-	//if (bPlot) Plot("Area", Area);
-
-	//sig.col(0) = 4 * Area.array() / (a.array()*b.array() * c.array());
-
-	//circShift(sig.col(0), temp, -1);
-	//sig.col(1) = temp - sig.col(0);
-	//circShift(sig.col(1), temp, 1);
-	//sig.col(1) = 1.5*(sig.col(1).array() / (a + b + c).array() + temp.array() / (a + b + g).array());
-
-	//if (bPlot) Plot("kappa", sig.col(0));
-	//if (bPlot) Plot("kappas", sig.col(1));
-
-	//waitKey(0);
 
 #else
 	VectorXd x(sz), y(sz), dx(sz), dy(sz), d2x(sz), d2y(sz), Area(sz), d1mag(sz), dkappa(sz);

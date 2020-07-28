@@ -13,7 +13,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "Eigen/Dense"
-
+#define OPT
 
 #define USE_TBB
 //#define USE_OMP
@@ -80,5 +80,7 @@ void AlwaysOutput(const char* szFormat, ...);
 #define FOR_END						}
 #endif
 #endif
+
+void WriteCSV(int nPieces);
 
 void Solver(const char* pszResume = nullptr);

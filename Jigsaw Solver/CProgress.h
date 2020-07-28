@@ -37,10 +37,10 @@ public:
 class CProgress
 {
 public:
-	CProgress() : m_Bars(nullptr), m_hWndGUI(NULL)
+	CProgress() : m_Bars(nullptr), m_hWndGUI(NULL)//, m_LastTimeUpdated(0)
 	{
 	}
-	CProgress(int n)
+	CProgress(int n) : m_hWndGUI(NULL)//, m_LastTimeUpdated(0)
 	{
 		m_Bars = new CProgressBar[n];
 	}
@@ -54,6 +54,8 @@ public:
 	CProgressBar*	m_Bars;
 
 	HWND			m_hWndGUI;			// If we're in a GUI, we can use this handle to send update messages
+
+	//ULONGLONG		m_LastTimeUpdated;	// Only update 1x per second
 
 	CProgressBar& operator[](int n) = delete;
 	CProgressBar& operator()(int n) { return m_Bars[n]; }
