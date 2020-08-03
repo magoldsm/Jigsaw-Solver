@@ -339,3 +339,5 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 /cath_rot.txt
+/test.csv
+/Over Rotate.xlsx

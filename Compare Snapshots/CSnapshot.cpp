@@ -8,7 +8,6 @@ CPScore PScores;
 
 std::vector<CFit> Fits;
 
-#ifdef OPT
 CArchive& operator<<(CArchive& ar, TwoPieces& tp)
 {
 	ar << tp[0];
@@ -23,7 +22,6 @@ CArchive& operator>>(CArchive& ar, TwoPieces& tp)
 	ar >> tp[1];
 	return ar;
 }
-#endif
 
 
 void CSnapshot::DumpScores()

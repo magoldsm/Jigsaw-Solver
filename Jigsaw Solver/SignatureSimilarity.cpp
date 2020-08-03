@@ -18,7 +18,6 @@ vector<CFit> Fits;
 
 vector<int> nFitSteps;
 
-#ifdef OPT
 CArchive& operator<<(CArchive& ar, TwoPieces& tp)
 {
 	ar << tp[0];
@@ -33,7 +32,6 @@ CArchive& operator>>(CArchive& ar, TwoPieces& tp)
 	ar >> tp[1];
 	return ar;
 }
-#endif
 
 
 inline double
@@ -453,7 +451,6 @@ CalcTranslation(CFit& fit, vector<CPlacement>& placements, vector<CTracker>& tra
 {
 	for (int c3 = 0; c3 < fit.m_Arcs.rows(); c3++)
 	{
-#ifdef OPT
 		const Curve& curve1 = Pieces[fit.m_Pieces[0]].m_Arcs(fit.m_Arcs(c3, 0)).m_Contour;
 		Curve curve2 = TransformCurve(
 			Pieces[fit.m_Pieces[1]].m_Arcs(fit.m_Arcs(c3, 1)).m_Contour,
@@ -462,16 +459,6 @@ CalcTranslation(CFit& fit, vector<CPlacement>& placements, vector<CTracker>& tra
 
 		const Curve& sig1 = Pieces[fit.m_Pieces[0]].m_Arcs(fit.m_Arcs(c3, 0)).m_Signature;
 		Curve sig2 = Orient_Reverse(Pieces[fit.m_Pieces[1]].m_Arcs(fit.m_Arcs(c3, 1)).m_Signature);
-#else
-		const Curve& curve1 = Pieces[fit.m_Pieces(0)].m_Arcs(fit.m_Arcs(c3, 0)).m_Contour;
-		Curve curve2 = TransformCurve(
-			Pieces[fit.m_Pieces(1)].m_Arcs(fit.m_Arcs(c3, 1)).m_Contour,
-			placements[tracker.back().m_Pc2Place[fit.m_Pieces(1)]].m_gLock);
-		curve2.colwise().reverseInPlace();
-
-		const Curve& sig1 = Pieces[fit.m_Pieces(0)].m_Arcs(fit.m_Arcs(c3, 0)).m_Signature;
-		Curve sig2 = Orient_Reverse(Pieces[fit.m_Pieces(1)].m_Arcs(fit.m_Arcs(c3, 1)).m_Signature);
-#endif
 
 		Rigid_Motion_Translation(fit.m_ArcTrans[c3],
 			curve1,
@@ -532,11 +519,7 @@ void ComputePScores(int nPiece1, int nPiece2, int j)
 
 }
 
-#ifdef OPT
 void ComputeMuScore(CFit& fitc2, TwoPieces& piecesc2)
-#else
-void ComputeMuScore(CFit& fitc2, Eigen::Vector2i& piecesc2)
-#endif
 {
 	if (fitc2.m_Score < 0)						// No score, yet
 	{
@@ -557,7 +540,6 @@ void ComputeMuScore(CFit& fitc2, Eigen::Vector2i& piecesc2)
 
 		for (int c3 = 0; c3 < fitc2.m_Arcs.rows(); c3++)
 		{
-#ifdef OPT
 			const Curve& curve1 = Pieces[piecesc2[0]].m_Arcs(fitc2.m_Arcs(c3, 0)).m_Contour;
 
 			Curve curve2 = TransformCurve(
@@ -567,17 +549,6 @@ void ComputeMuScore(CFit& fitc2, Eigen::Vector2i& piecesc2)
 
 			const Curve& sig1 = Pieces[piecesc2[0]].m_Arcs(fitc2.m_Arcs(c3, 0)).m_Signature;
 			Curve sig2 = Orient_Reverse(Pieces[piecesc2[1]].m_Arcs(fitc2.m_Arcs(c3, 1)).m_Signature);
-#else
-			const Curve& curve1 = Pieces[piecesc2(0)].m_Arcs(fitc2.m_Arcs(c3, 0)).m_Contour;
-
-			Curve curve2 = TransformCurve(
-				Pieces[piecesc2(1)].m_Arcs(fitc2.m_Arcs(c3, 1)).m_Contour,
-				Placements[Tracker.back().m_Pc2Place[piecesc2(1)]].m_gLock);
-			curve2.colwise().reverseInPlace();
-
-			const Curve& sig1 = Pieces[piecesc2(0)].m_Arcs(fitc2.m_Arcs(c3, 0)).m_Signature;
-			Curve sig2 = Orient_Reverse(Pieces[piecesc2(1)].m_Arcs(fitc2.m_Arcs(c3, 1)).m_Signature);
-#endif
 
 			fitc2.m_ArcTrans[c3].theta = Rigid_Motion_Angle(curve1, curve2, sig1, sig2, pParams->m_nBeta);
 
@@ -772,11 +743,7 @@ void FindConsecutive(int& nPiece1, int& nPiece2, int j)
 						MatrixXi x;
 						CFit fit;
 						fit.m_Size = minIncluded;
-#ifdef OPT
 						fit.m_Pieces = TwoPieces(nPiece1, nPiece2);
-#else
-						fit.m_Pieces = Vector2i(nPiece1, nPiece2);
-#endif
 						Map<Matrix<int, -1, 2, RowMajor> > t((int*)tArcs.data(), tArcs.size(), 2);
 						fit.m_Arcs = t.block(c8, 0, minIncluded, 2);
 						fit.m_Slot = 1;
@@ -788,11 +755,7 @@ void FindConsecutive(int& nPiece1, int& nPiece2, int j)
 				{
 					CFit fit;
 					fit.m_Size = c6 + c7 - 1;
-#ifdef OPT
 					fit.m_Pieces = TwoPieces(nPiece1, nPiece2);
-#else
-					fit.m_Pieces = Vector2i(nPiece1, nPiece2);
-#endif
 					Map<Matrix<int, -1, 2, RowMajor> > t((int*)tArcs.data(), tArcs.size(), 2);
 					fit.m_Arcs = t;
 					fit.m_Slot = 1;
@@ -806,24 +769,14 @@ void FindConsecutive(int& nPiece1, int& nPiece2, int j)
 	}
 }
 
-#ifdef OPT
 bool TryLock(int c2, CFit& fitc2, GTransform& gLock, int j, Indices& tPiecePtIcs, LRESULT& plotHandle, TwoPieces& piecesc2, Vector5d& score)
-#else
-bool TryLock(int c2, CFit& fitc2, GTransform& gLock, int j, Indices& tPiecePtIcs, LRESULT& plotHandle, Eigen::Vector2i& piecesc2, Vector5d& score)
-#endif
 {
 	Indices tPiecePtIcs_3;
 	double q1, q2, q3, q4;
 
-#ifdef OPT
 	DebugOutput("Lock c2=%d: Piece %d, %d points.  SPB has %d points  theta=%.4f\n", c2, fitc2.m_Pieces[0], Pieces[fitc2.m_Pieces[0]].m_Contour.rows(), Tracker.back().m_SolvedPuzzleBoundary.rows(), fitc2.m_gFit.theta);
 
 	Lock(fitc2, Pieces[fitc2.m_Pieces[0]].m_Contour, Tracker.back().m_SolvedPuzzleBoundary,
-#else
-	DebugOutput("Lock c2=%d: Piece %d, %d points.  SPB has %d points  theta=%.4f\n", c2, fitc2.m_Pieces(0, 0), Pieces[fitc2.m_Pieces(0, 0)].m_Contour.rows(), Tracker.back().m_SolvedPuzzleBoundary.rows(), fitc2.m_gFit.theta);
-
-	Lock(fitc2, Pieces[fitc2.m_Pieces(0, 0)].m_Contour, Tracker.back().m_SolvedPuzzleBoundary,
-#endif
 		gLock, pParams->m_K3[j], tPiecePtIcs_3, Tracker.back().m_SP_Bdry_PtIcs_3, tPiecePtIcs, Tracker.back().m_SP_Bdry_PtIcs, pParams->m_szPlotLevel[0] > '2', plotHandle);
 
 	// Compute Scores
@@ -852,18 +805,6 @@ bool TryLock(int c2, CFit& fitc2, GTransform& gLock, int j, Indices& tPiecePtIcs
 		score << q1, q2, q3, q4, pParams->m_dEta1* q1 + pParams->m_dEta2 * q3;
 		return false;
 	}
-#if 0
-
-	size_t sz3 = Tracker.back().m_SP_Bdry_PtIcs_3.size();
-
-	for (size_t i = 0; i < sz3; i++)
-	{
-		CvPoint p;
-		p.x = 
-		pointPolygonTest;
-		q4 += 
-	}
-#endif
 
 	score << q1, q2, q3, q4, pParams->m_dEta1* q1 + pParams->m_dEta2 * q3;
 	return (pParams->m_dEta1 * q1 + pParams->m_dEta2 * q3 > pParams->m_dQ1 || q2 > pParams->m_dQ2Star) && q2 > pParams->m_dQ2 && q3 > pParams->m_dQ3;
@@ -891,17 +832,10 @@ void PlotAllPlacements(const LRESULT& fragh, int c1, LRESULT& farch1, LRESULT& f
 
 		for (int c4 = 0; c4 < fit.m_Arcs.rows(); c4++)
 		{
-#ifdef OPT
 			Curve x1 = TransformCurve(Pieces[fit.m_Pieces[0]].m_Arcs(fit.m_Arcs(c4, 0)).m_Contour,
 				Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[0]]].m_gLock);
 			Curve x2 = TransformCurve(Pieces[fit.m_Pieces[1]].m_Arcs(fit.m_Arcs(c4, 1)).m_Contour,
 				Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[1]]].m_gLock);
-#else
-			Curve x1 = TransformCurve(Pieces[fit.m_Pieces(0)].m_Arcs(fit.m_Arcs(c4, 0)).m_Contour,
-				Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[0]]].m_gLock);
-			Curve x2 = TransformCurve(Pieces[fit.m_Pieces(1)].m_Arcs(fit.m_Arcs(c4, 1)).m_Contour,
-				Placements[Tracker.back().m_Pc2Place[fit.m_Pieces[1]]].m_gLock);
-#endif
 
 			Append(farcpts1, x1);
 			Append(farcpts2, x2);
@@ -1071,47 +1005,23 @@ void PlacePieces()
 
 		while (c2 < Fits.size())
 		{
-			//for (CFit& f : Fits)
-			//	if (f.m_Score == 0)
-			//		__debugbreak();
-
 			CFit& fitc2 = Fits[c2];
-#ifdef OPT
 			TwoPieces& piecesc2 = fitc2.m_Pieces;
 
 			if (Pieces[piecesc2[1]].m_nActive &&
 				IsMember(piecesc2[0], Tracker.back().m_RemainingPieces) &&
 				!AnyMatch(fitc2.m_Arcs.col(1), Tracker.back().m_InactiveArcs[piecesc2[1]]))
-#else
-			Vector2i& piecesc2 = fitc2.m_Pieces;
-
-			if (Pieces[piecesc2(1)].m_nActive &&
-				IsMember(piecesc2(0), Tracker.back().m_RemainingPieces) &&
-				!AnyMatch(fitc2.m_Arcs.col(1), Tracker.back().m_InactiveArcs[piecesc2(1)]))
-#endif
 			{
 			//% --------------------------------------------------------------------------
 			//% Calculate transformation and mu - score
 			//% --------------------------------------------------------------------------
 
-				//for (CFit& f : Fits)
-				//	if (f.m_Score == 0)
-				//		__debugbreak();
-
 				ComputeMuScore(fitc2, piecesc2);
-
-				//for (CFit& f : Fits)
-				//	if (f.m_Score == 0)
-				//		__debugbreak();
 
 				if (fitc2.m_Score >= 0 && fitc2.m_Score < pParams->m_MU0[j])
 				{
 					int temp = c2;
 					TryShortening(fitc2, j, c2);
-
-					//for (CFit& f : Fits)
-					//	if (f.m_Score == 0)
-					//		__debugbreak();
 
 					if (pParams->m_bDumpFitBeforeQSort)
 					{
@@ -1127,22 +1037,25 @@ void PlacePieces()
 					Indices tPiecePtIcs;
 					Vector5d score;
 
+#ifdef _DEBUG
+					int p0 = fitc2.m_Pieces[0];
+					if (p0 == 55)
+					{
+						fitc2.m_gFit.theta = 2.205695344892561;
+						fitc2.m_gFit.dx = 3.425508042156975e+02;
+						fitc2.m_gFit.dy = -8.708948917850823e+02;
+						pParams->m_szPlotLevel[0] = '3';
+					}
+#endif
 
 					bool bLockSucceeded = TryLock(c2, fitc2, gLock, j, tPiecePtIcs, plotHandle, piecesc2, score);
 
 					if (bLockSucceeded && pParams->m_bConfirmBeforePlacing)
 					{
-#ifdef OPT
 						auto h = Progress.Plot(TransformCurve(Pieces[fitc2.m_Pieces[0]].m_Contour, gLock));
 
 						char buff[1024];
 						sprintf_s(buff, sizeof(buff), "%d: %.3f  %.3f  %.3f  %.3f  %3f", fitc2.m_Pieces[0], score(0), score(1), score(2), score(3),score(4));
-#else
-						auto h = Progress.Plot(TransformCurve(Pieces[fitc2.m_Pieces(0)].m_Contour, gLock));
-
-						char buff[1024];
-						sprintf_s(buff, sizeof(buff), "%d: %.3f  %.3f  %.3f  %.3f  %3f", fitc2.m_Pieces(0), score(0), score(1), score(2), score(3),score(4));
-#endif
 
 						auto res = Progress.ConfirmPlacement(buff);
 						if (res == IDNO)
@@ -1192,11 +1105,7 @@ void PlacePieces()
 						}
 
 						Placements[c1].m_Neighbors.resize(0);
-#ifdef OPT
 						Pieces[fitc2.m_Pieces[0]].m_nActive = 2;
-#else
-						Pieces[fitc2.m_Pieces(0)].m_nActive = 2;
-#endif
 
 						vector<int>& neighbors = Placements[c1].m_Neighbors;
 
@@ -1218,11 +1127,7 @@ void PlacePieces()
 								for (int i = 0; i < sz; i++)
 									Pieces[toSetActive[i]].m_nActive = 2;
 
-#ifdef OPT
 								toSetActive.push_back(fitc2.m_Pieces[0]);
-#else
-								toSetActive.push_back(fitc2.m_Pieces(0));
-#endif
 
 							}
 
@@ -1242,11 +1147,7 @@ void PlacePieces()
 
 						}
 
-#ifdef OPT
 						auto& fitc2piece = fitc2.m_Pieces[0];
-#else
-						auto& fitc2piece = fitc2.m_Pieces(0);
-#endif
 
 						Tracker.back().m_InactivePoints[fitc2piece] = tPiecePtIcs;
 
@@ -1290,11 +1191,7 @@ void PlacePieces()
 
 						Tracker.back().m_SolvedPuzzleBoundary = RemoveElements(Tracker.back().m_SolvedPuzzleBoundary, Tracker.back().m_SP_Bdry_PtIcs);
 
-#ifdef OPT
 						Curve tPiece = Pieces[fitc2.m_Pieces[0]].m_Contour;
-#else
-						Curve tPiece = Pieces[fitc2.m_Pieces(0)].m_Contour;
-#endif
 						vector<int> tTrack;
 						AllExcept(tTrack, tPiece.rows(), tPiecePtIcs);
 						tPiece = RemoveElements(tPiece, tPiecePtIcs);

@@ -221,7 +221,7 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	Matrix<Index, 1, -1> totsRow = bNearby.rowwise().count();
 	int nEtildeDeltas = (int)(totsRow.array() > 0).count();
 
-	DebugOutput("nEDeltas=%d  nEtildeDeltas=%d\n", nEDeltas, nEtildeDeltas);
+//	DebugOutput("nEDeltas=%d  nEtildeDeltas=%d\n", nEDeltas, nEtildeDeltas);
 
 	Curve debugEtildeDeltaK1;
 	debugEtildeDeltaK1.resize(nEtildeDeltas, 2);
@@ -302,8 +302,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	MatrixXd translation = rot * zCMt - zCMt + Vector2d(g0.dx, g0.dy);
 
 	GTransform gj(g0.theta, translation(0), translation(1));
-	double gjSin = sin(gj.theta);
-	double gjCos = cos(gj.theta);
 	RowVector2d wj = zCMt + translation;
 
 	// Perform iterative pertubation
@@ -313,12 +311,28 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	Vector2d cJm1(0.0, 0.0);
 	double dStarK4 = pParams->m_dK4 * dStar;
 	bool bSeenOneTerminationCondition = false;
+	//MatrixXd taus, fxs, fys, txs, tys;
+	//taus.resize(pParams->m_nJmax, nEDeltas);
+	//fxs.resize(pParams->m_nJmax, nEDeltas);
+	//fys.resize(pParams->m_nJmax, nEDeltas);
+	//txs.resize(pParams->m_nJmax, nEDeltas);
+	//tys.resize(pParams->m_nJmax, nEDeltas);
+	//taus.setZero();
+	//fxs.setZero();
+	//fys.setZero();
+	//txs.setZero();
+	//tys.setZero();
+	//int jMax = -1;
 
 	for (int j = 0; j < pParams->m_nJmax; j++)
 	{
+		//jMax = j;
+
 		double tauTotj = 0.0;
 		RowVector2d fTotj(0.0, 0.0);
 		VectorXd Aj(nEDeltas);
+		double gjSin = sin(gj.theta);
+		double gjCos = cos(gj.theta);
 
 		for (int c2 = 0; c2 < nEDeltas; c2++)
 		{
@@ -335,21 +349,30 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 				Vector2d fj = (diff.array().colwise() / (diffNorm.array().pow(pParams->m_nNu + 1) + pParams->m_dEpsilon * diffNorm.array())).colwise().sum();
 				fTotj.array() += fj.array();
 				RowVector2d t = EDeltaK1Transformed - wj;
-				tauTotj += t[0] * fj[1] - t[1] * fj[0];		// 
+				tauTotj += t[0] * fj[1] - t[1] * fj[0];
+				//taus(j, c2) = t[0] * fj[1] - t[1] * fj[0];
+				//fxs(j, c2) = fj[0];
+				//fys(j, c2) = fj[1];
+				//txs(j, c2) = t[0];
+				//tys(j, c2) = t[1];
 			}
 		}
 
 		// Equation 5.10
 
 		double dAvj = Aj.mean();
+
 		qsort(Aj.data(), Aj.rows(), sizeof(double), [](const void* p1, const void* p2) -> int
 		{
-			return (int)(*(double*)p1 - *(double*)p2);
+			double d = (*(double*)p1 - *(double*)p2);
+			if (d > 0) return 1;
+			if (d < 0) return -1;
+			return 0;
 		});
 
 		double dMedj = Aj.rows() & 1 ? Aj[Aj.rows() / 2] : (Aj[Aj.rows() / 2 - 1] + Aj[Aj.rows() / 2]) / 2;
 
-		DebugOutput("dAvj=%f  dMedj=%f\n", dAvj, dMedj);
+//		DebugOutput("dAvj=%f  dMedj=%f\n", dAvj, dMedj);
 
 		// Terminate the algorithm if fit is poor and getting worse.
 
@@ -367,8 +390,10 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 				Curve c = TransformCurveAboutCM(CDelta, gj, zCM);
 
 				plotHandle = Progress.Plot(c);
+				Sleep(50);
 			}
 
+			DebugOutput("Worsening\n");
 			break;
 		}
 
@@ -399,20 +424,72 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 			c.rowwise() += zCM;
 
 			plotHandle = Progress.Plot(c);
+			Sleep(50);
 		}
+
+		//DebugOutput("%d,%.7g,%.7g,%.7g,%.7g,%.7g,%.7g,%.7g,%.7g,%.7g\n", j, gj.theta, gj.dx, gj.dy, thetaj, cj[0], cj[1], tauTotj, fTotj[0], fTotj[1]);
 
 		// Step 7, termination condition
 
 		if ((thetaj * ThetaJm1 < 0 && cj[0] * cJm1[0] < 0 && cj[1] * cJm1[1] < 0))
 		{
-		//	if (bSeenOneTerminationCondition)
-				break;
-		//	bSeenOneTerminationCondition = true;
+			DebugOutput("Termination\n");
+			break;
 		}
 
 		ThetaJm1 = thetaj;
 		cJm1 = cj;
 	}
+
+	//DebugOutput("Tau--------------------------------------\n");
+	//for (int j = 0; j < jMax; j++)
+	//{
+	//	for (int c2 = 0; c2 < nEDeltas; c2++)
+	//	{
+	//		DebugOutput("%.7g,", taus(j, c2));
+	//	}
+	//	DebugOutput("\n");
+	//}
+
+	//DebugOutput("Fx--------------------------------------\n");
+	//for (int j = 0; j < jMax; j++)
+	//{
+	//	for (int c2 = 0; c2 < nEDeltas; c2++)
+	//	{
+	//		DebugOutput("%.7g,", fxs(j, c2));
+	//	}
+	//	DebugOutput("\n");
+	//}
+
+	//DebugOutput("Fy--------------------------------------\n");
+	//for (int j = 0; j < jMax; j++)
+	//{
+	//	for (int c2 = 0; c2 < nEDeltas; c2++)
+	//	{
+	//		DebugOutput("%.7g,", fys(j, c2));
+	//	}
+	//	DebugOutput("\n");
+	//}
+
+	//DebugOutput("Tx--------------------------------------\n");
+	//for (int j = 0; j < jMax; j++)
+	//{
+	//	for (int c2 = 0; c2 < nEDeltas; c2++)
+	//	{
+	//		DebugOutput("%.7g,", txs(j, c2));
+	//	}
+	//	DebugOutput("\n");
+	//}
+
+	//DebugOutput("Ty--------------------------------------\n");
+	//for (int j = 0; j < jMax; j++)
+	//{
+	//	for (int c2 = 0; c2 < nEDeltas; c2++)
+	//	{
+	//		DebugOutput("%.7g,", tys(j, c2));
+	//	}
+	//	DebugOutput("\n");
+	//}
 
 	// Find indices of relevant sets
 
@@ -420,7 +497,7 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 	double K3dStar = K3 * dStar;
 
 	//auto start = std::chrono::high_resolution_clock::now();
-#ifdef OPT
+
 	if (nC > 1000)
 		__debugbreak();
 
@@ -433,17 +510,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 
 	double cdtrx[1000];
 	double cdtry[1000];
-#else
-	VectorXb* test2 = new VectorXb[nC];;
-	VectorXb* test3 = new VectorXb[nC];
-
-	Vector2d* temp = new Vector2d[nC];
-	double* tempx = new double[nC];
-	double* tempy = new double[nC];
-
-	double* cdtrx = new double[nC];
-	double* cdtry = new double[nC];
-#endif
 
 	//auto end = std::chrono::high_resolution_clock::now();
 	//std::chrono::duration<double, std::micro> elapsed = end - start;
@@ -529,16 +595,6 @@ Lock(CFit& fit, const Curve& CDelta, const Curve& CtildeDelta, GTransform& gLock
 			D_Delta_3_Ics.push_back(c2);
 		}
 	}
-
-#ifndef OPT
-	delete[] test2;
-	delete[] test3;
-	delete[] temp;
-	delete[] tempx;
-	delete[] tempy;
-	delete[] cdtrx;
-	delete[] cdtry;
-#endif
 
 	auto icmp = [](const void* p1, const void* p2)
 	{

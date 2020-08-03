@@ -62,11 +62,7 @@ void CFit::Serialize(CArchive& ar)
 	{
 		ar << "CFit";
 
-#ifdef OPT
 		if (m_Pieces[0] < -1 || m_Pieces[0] > 100 || m_Pieces[1] < -1 || m_Pieces[1] > 100)
-#else
-		if (m_Pieces(0) < -1 || m_Pieces(0) > 100 || m_Pieces(1) < -1 || m_Pieces(1) > 100)
-#endif
 		__debugbreak();
 
 		ar << m_Pieces;
@@ -101,15 +97,9 @@ void CFit::Serialize(CArchive& ar)
 void CFit::Dump(int nIdx, ofstream& file)
 {
 	file << "Index: " << nIdx << endl;
-#ifdef OPT
 	file << "    Pieces: [" << m_Pieces[0] << " " << m_Pieces[1] << "]\n";
 	file << "    " << m_Size << " Arcs\n";
 	Eigen::MatrixXd pscore = PScores(m_Pieces[0], m_Pieces[1]);
-#else
-	file << "    Pieces: [" << m_Pieces(0) << " " << m_Pieces(1) << "]\n";
-	file << "    " << m_Size << " Arcs\n";
-	Eigen::MatrixXd pscore = PScores(m_Pieces(0), m_Pieces(1));
-#endif
 	for (int i = 0; i < m_Size; i++)
 	{
 		file << "    " << setw(3) << m_Arcs(i, 0) << setw(3) << m_Arcs(i, 1);

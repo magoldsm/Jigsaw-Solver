@@ -13,7 +13,6 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "Eigen/Dense"
-#define OPT
 
 #define USE_TBB
 //#define USE_OMP
